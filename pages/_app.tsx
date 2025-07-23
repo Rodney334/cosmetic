@@ -1,21 +1,24 @@
-// import { SessionProvider } from 'next-auth/react';
 import type { AppProps } from 'next/app';
 import { ReactElement } from 'react';
 import Layout from '@/layouts/Layout';
+import DashboardLayout from '@/layouts/DashboardLayout';
 import '@/styles/globals.css';
 
-type CustomAppProps = AppProps & {
-  Component: AppProps['Component'] & {
+type AppPropsWithLayout = AppProps & {
+  Component: {
     getLayout?: (page: ReactElement) => ReactElement;
+    isDashboard?: boolean; // Nouvelle prop
   };
 };
 
-export default function App({
-  Component,
-  pageProps: { session, ...pageProps }
-}: CustomAppProps) {
-  // Utilisez le layout personnalisé du composant si défini, sinon utilisez le Layout par défaut
-  const getLayout = Component.getLayout || ((page) => <Layout>{page}</Layout>);
+export default function App({ Component, pageProps }: AppPropsWithLayout) {
+  // Détermine automatiquement le layout en fonction du chemin
+  const getLayout = Component.getLayout || ((page) => {
+    return Component.isDashboard
+      ? <DashboardLayout>{page}</DashboardLayout>
+      : <Layout>{page}</Layout>;
+  });
+
   return getLayout(<Component {...pageProps} />);
 }
 

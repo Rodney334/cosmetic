@@ -1,21 +1,51 @@
 // /pages/private/dashboard.tsx
 // import { getSession, signOut, useSession } from 'next-auth/react';
+import type { NextPageWithLayout } from '@/types';
 import { useRouter } from 'next/router';
+import StatCard from '@/components/StatCard';
+import SystemSection from '@/components/SystemSection';
 
-export default function Dashboard() {
+const Dashboard: NextPageWithLayout = () => {
   // const { data: session, status } = useSession();
   const router = useRouter();
 
   // if (status === 'loading') return <div>Chargement...</div>;
-
+  const data = [
+    {
+      title: "Receives Orders",
+      value: "15,234",
+      description: "+$7x on media",
+      badge: "vt multi-prededent",
+    },
+    {
+      title: "Reports Mentacle",
+      value: "4,892",
+      description: "+24% on media",
+      badge: "PDF + Excel",
+    }
+  ]
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <h1 className="text-3xl font-bold">Tableau de bord</h1>
-      <p className="mt-2">Bienvenue</p>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {data.map((item, index) => (
+          <StatCard
+            key={index}
+            title={item.title}
+            value={item.value}
+            description={item.description}
+            badge={item.badge}
+          />
+        ))}
+      </div>
+
+      <SystemSection />
     </div>
   );
 }
 
+Dashboard.isDashboard = true;
+
+export default Dashboard;
 // export const getServerSideProps = async (ctx: any) => {
 //   const session = await getSession(ctx);
 //   if (!session) return { redirect: { destination: '/public/login' } };
