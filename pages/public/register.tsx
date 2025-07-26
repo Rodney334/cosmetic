@@ -43,7 +43,7 @@ const SignupPage = () => {
         {/* Geometric figure */}
         <div className="mt-8 md:mt-0 md:absolute md:bottom-64 md:left-16">
           <Image
-            src="/fg_geometric.png"
+            src="/assets/fg_geometric.png"
             alt="Geometric figure"
             width={250}
             height={150}

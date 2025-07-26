@@ -22,7 +22,7 @@ const Login = () => {
   return (
     <div
       className="mx-auto max-w-7xl w-full px-4 mt-20 min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: "url('/bg_login.png')" }}
+      style={{ backgroundImage: "url('/assets/bg_login.png')" }}
     >
       <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full overflow-hidden">
         <div className="flex flex-col lg:flex-row">
