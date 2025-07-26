@@ -24,25 +24,25 @@ const Header = () => {
             </Link>
             <nav className="hidden md:flex space-x-6">
               <Link
-                href="/mes-recettes"
+                href="/public/recette"
                 className="text-gray-600 hover:text-gray-900 transition-colors"
               >
                 Mes Recettes
               </Link>
               <Link
-                href="/ingredients"
+                href="/public/ingredient"
                 className="text-gray-600 hover:text-gray-900 transition-colors"
               >
                 Ingrédients
               </Link>
               <Link
-                href="/nouvelle-recette"
+                href="/public/newRecette"
                 className="text-gray-600 hover:text-gray-900 transition-colors"
               >
                 Nouvelle Recette
               </Link>
               <Link
-                href="/guide"
+                href="/public/blog"
                 className="text-gray-600 hover:text-gray-900 transition-colors"
               >
                 Guide
@@ -83,28 +83,28 @@ const Header = () => {
           <div className="md:hidden border-t border-gray-200 bg-white">
             <div className="px-2 pt-2 pb-3 space-y-1">
               <Link
-                href="/mes-recettes"
+                href="/public/recette"
                 onClick={closeMenu}
                 className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
               >
                 Mes Recettes
               </Link>
               <Link
-                href="/ingredients"
+                href="/public/ingredient"
                 onClick={closeMenu}
                 className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
               >
                 Ingrédients
               </Link>
               <Link
-                href="/nouvelle-recette"
+                href="/public/newRecette"
                 onClick={closeMenu}
                 className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
               >
                 Nouvelle Recette
               </Link>
               <Link
-                href="/guide"
+                href="/public/blog"
                 onClick={closeMenu}
                 className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
               >

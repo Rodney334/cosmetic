@@ -56,7 +56,7 @@ const Profil = () => {
               <div className="relative">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
                   <Image
-                    src="/profile.png"
+                    src="/assets/profile.png"
                     alt="Profile picture"
                     width={96}
                     height={96}
