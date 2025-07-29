@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { HiUser } from "react-icons/hi";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -53,12 +55,22 @@ const Header = () => {
             <select className="text-sm text-gray-600 bg-transparent border-none outline-none cursor-pointer">
               <option>French (France)</option>
             </select>
-            <Link href="/public/login">
-              <button className="flex items-center gap-2 bg-white text-black border border-black px-4 py-2 rounded-md text-sm hover:bg-gray-100 transition-colors cursor-pointer">
-                <HiUser className="w-5 h-5 text-black" />
-                Se connecter / Créer un compte
-              </button>
-            </Link>
+            {session ? (
+              <Link
+                href="/private/dashboard"
+                className="flex lg:flex-row sm:flex-col items-center lg:p-2 px-2 gap-2 bg-white text-black border border-black rounded-md text-sm hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <HiUser className="w-5 h-5" />
+                <p className="lg:pt-2">{session.user.name}</p>
+              </Link>
+            ) : (
+              <Link href="/public/login">
+                <button className="flex items-center gap-2 bg-white text-black border border-black px-4 py-2 rounded-md text-sm hover:bg-gray-100 transition-colors cursor-pointer">
+                  <HiUser className="w-5 h-5 text-black" />
+                  Se connecter / Créer un compte
+                </button>
+              </Link>
+            )}
           </div>
           <div className="md:hidden flex items-center space-x-2">
             <select className="text-xs text-gray-600 bg-transparent border-none outline-none cursor-pointer">
@@ -113,11 +125,11 @@ const Header = () => {
 
               {/* Bouton de connexion mobile */}
               <Link href="/public/login">
-              <div className="px-3 py-2">
-                <button className="w-full bg-gray-900 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800 transition-colors">
-                  Se connecter / Créer un compte
-                </button>
-              </div>
+                <div className="px-3 py-2">
+                  <button className="w-full bg-gray-900 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800 transition-colors">
+                    Se connecter / Créer un compte
+                  </button>
+                </div>
               </Link>
             </div>
           </div>

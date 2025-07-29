@@ -1,3 +1,4 @@
+import { signOut } from "next-auth/react";
 import SidebarItem from "./SidebarItem";
 import {
   Settings,
@@ -7,12 +8,23 @@ import {
   LayoutDashboard,
   ChartNoAxesCombined,
   ShieldCheck,
+  LogOut,
+  Home,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardSidebar() {
   return (
     <aside className="w-64 bg-white border-r border-gray-200 p-4">
-      <h2 className="text-xl font-bold text-gray-800 mb-6">@Natureum</h2>
+      <div className="flex items-center justify-start gap-2 mb-6">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-black border border-black p-2 rounded-md text-sm hover:bg-gray-100 transition-colors cursor-pointer"
+        >
+          <Home className="w-5 h-5 text-black" />
+        </Link>
+        <h2 className="text-xl font-bold text-gray-800">@Natureum</h2>
+      </div>
 
       <nav>
         <div className="mb-8">
@@ -54,6 +66,12 @@ export default function DashboardSidebar() {
               title="Paramètres"
               href="/private/parametres"
               icon={<Settings className="h-5 w-5" />}
+            />
+            <SidebarItem
+              title="Déconnexion"
+              href="/private"
+              icon={<LogOut className="h-5 w-5" />}
+              logOut={() => signOut()}
             />
           </ul>
         </div>

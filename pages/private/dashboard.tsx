@@ -1,15 +1,16 @@
 // /pages/private/dashboard.tsx
-// import { getSession, signOut, useSession } from 'next-auth/react';
-import type { NextPageWithLayout } from '@/types';
-import { useRouter } from 'next/router';
-import StatCard from '@/components/StatCard';
-import SystemSection from '@/components/SystemSection';
+import { getSession, useSession } from "next-auth/react";
+import type { NextPageWithLayout } from "@/types";
+import { useRouter } from "next/router";
+import StatCard from "@/components/StatCard";
+import SystemSection from "@/components/SystemSection";
 
 const Dashboard: NextPageWithLayout = () => {
-  // const { data: session, status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
+  console.log("sessioin:", session);
 
-  // if (status === 'loading') return <div>Chargement...</div>;
+  if (status === "loading") return <div>Chargement...</div>;
   const data = [
     {
       title: "Receives Orders",
@@ -22,8 +23,8 @@ const Dashboard: NextPageWithLayout = () => {
       value: "4,892",
       description: "+24% on media",
       badge: "PDF + Excel",
-    }
-  ]
+    },
+  ];
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -41,13 +42,14 @@ const Dashboard: NextPageWithLayout = () => {
       <SystemSection />
     </div>
   );
-}
+};
 
 Dashboard.isDashboard = true;
 
 export default Dashboard;
-// export const getServerSideProps = async (ctx: any) => {
-//   const session = await getSession(ctx);
-//   if (!session) return { redirect: { destination: '/public/login' } };
-//   return { props: {} };
-// };
+
+export const getServerSideProps = async (ctx: any) => {
+  const session = await getSession(ctx);
+  if (!session) return { redirect: { destination: "/public/login" } };
+  return { props: {} };
+};
