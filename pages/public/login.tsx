@@ -1,29 +1,107 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { Toaster } from "react-hot-toast";
+import { useRouter } from "next/router";
+import { signIn } from "next-auth/react";
+
+import { LoginDataType } from "@/types/auth.type";
+import { CustomErrorToast, CustomSuccessToast } from "@/components/CustomToast";
 
 const Login = () => {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+
+  // Nettoyage du timeout si le composant est démonté
+  useEffect(() => {
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [timeoutId]);
+
+  const validationSchema = Yup.object().shape({
+    email: Yup.string()
+      .email("Veuillez entrer une adresse email valide")
+      .required("L'email est obligatoire"),
+    password: Yup.string()
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/,
+        "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial"
+      )
+      .required("Le mot de passe est obligatoire"),
+  });
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
-
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Connexion:", { email, password });
-  };
 
   const handleGoogleLogin = () => {
     console.log("Connexion avec Google");
   };
+
+  const formik = useFormik({
+    initialValues: {
+      email: "rodneyvodounnou@gmail.com",
+      password: "Azerty123@",
+    },
+    validationSchema,
+    onSubmit: async (values: LoginDataType) => {
+      // Ici vous pourriez ajouter votre logique de soumission (API call, etc.)
+      // console.log("Form submitted:", values);
+      setIsLoading(true);
+      try {
+        const result = await signIn("credentials", {
+          redirect: false,
+          email: values.email,
+          password: values.password,
+        });
+
+        if (result?.error) {
+          CustomErrorToast(
+            "Erreur de connexion. Veuillez vérifier vos informations."
+          );
+        } else {
+          console.log("result:", result);
+          CustomSuccessToast("Connexion réussie ! Redirection en cours...");
+          const id = setTimeout(() => router.push("/"), 2000);
+          setTimeoutId(id);
+        }
+      } catch (error) {
+        CustomErrorToast("Une erreur est survenue lors de la connexion.");
+      } finally {
+        setIsLoading(false);
+      }
+      // axios.post(`${api.base_url}/auth/login`, values)
+      //   .then((response) => {
+      //     console.log("response :", response);
+      //     localStorage.setItem("accessToken", response.data.accessToken);
+      //     localStorage.setItem("refreshToken", response.data.refreshToken);
+      //     localStorage.setItem("user", response.data.user);
+      //     signIn('credentials', { email: 'test@test.com', password: 'test' });
+      //     CustomSuccessToast("Connexion réussie ! Redirection en cours...");
+      //     const id = setTimeout(() => {
+      //       router.push("/");
+      //     }, 2000);
+      //     setTimeoutId(id);
+      //   })
+      //   .catch((error) => {
+      //     // console.log("failed :", error);
+      //     CustomErrorToast("Erreur de connexion. Veuillez vérifier vos informations.");
+      //   });
+    },
+  });
 
   return (
     <div
       className="mx-auto max-w-7xl w-full px-4 mt-20 min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: "url('/assets/bg_login.png')" }}
     >
+      <Toaster />
       <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full overflow-hidden">
         <div className="flex flex-col lg:flex-row">
           {/* Section Connexion */}
@@ -33,15 +111,18 @@ const Login = () => {
                 Se connecter
               </h2>
 
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={formik.handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Email
                   </label>
                   <input
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="email"
+                    name="email"
+                    value={formik.values.email}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                     required
                   />
@@ -53,8 +134,11 @@ const Login = () => {
                   </label>
                   <input
                     type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    id="password"
+                    name="password"
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                     required
                   />
@@ -89,6 +173,7 @@ const Login = () => {
                 <button
                   type="submit"
                   className="w-full bg-gray-400 hover:bg-gray-500 text-white font-medium py-3 px-4 rounded-full transition-colors duration-200 cursor-pointer"
+                  disabled={isLoading}
                 >
                   Se connecter
                 </button>

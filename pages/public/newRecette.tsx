@@ -73,11 +73,11 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-              ...phase,
-              ingredients: phase.ingredients.map((ing) =>
-                ing.id === ingredientId ? { ...ing, [field]: value } : ing
-              ),
-            }
+            ...phase,
+            ingredients: phase.ingredients.map((ing) =>
+              ing.id === ingredientId ? { ...ing, [field]: value } : ing
+            ),
+          }
           : phase
       )
     );
@@ -88,18 +88,18 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-              ...phase,
-              ingredients: [
-                ...phase.ingredients,
-                {
-                  id: Date.now() + Math.random(),
-                  name: "",
-                  family: "",
-                  percentage: "",
-                  cost: "",
-                },
-              ],
-            }
+            ...phase,
+            ingredients: [
+              ...phase.ingredients,
+              {
+                id: Date.now() + Math.random(),
+                name: "",
+                family: "",
+                percentage: "",
+                cost: "",
+              },
+            ],
+          }
           : phase
       )
     );
@@ -110,11 +110,11 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-              ...phase,
-              ingredients: phase.ingredients.filter(
-                (ing) => ing.id !== ingredientId
-              ),
-            }
+            ...phase,
+            ingredients: phase.ingredients.filter(
+              (ing) => ing.id !== ingredientId
+            ),
+          }
           : phase
       )
     );
@@ -198,7 +198,7 @@ const RecipeInterface = () => {
             </select>
             <span className="text-gray-600">(= {calculatedTotal} ml)</span>
           </div>
-          <button className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 cursor-pointer">
+          <button className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-gray-700 cursor-pointer">
             Valider
           </button>
         </div>
@@ -263,7 +263,7 @@ const RecipeInterface = () => {
               className="w-full p-3 border border-gray-300 rounded-lg"
             />
           </div>
-          <button className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 flex items-center gap-2 cursor-pointer">
+          <button className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-gray-700 flex items-center gap-2 cursor-pointer">
             <Calculator className="w-4 h-4" />
             Calculer
           </button>
@@ -275,19 +275,18 @@ const RecipeInterface = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded font-medium cursor-pointer ${
-                activeTab === tab
-                  ? tab === "Tous"
-                    ? "bg-gray-700 text-white"
-                    : tab === "Phase A"
+              className={`px-4 py-2 rounded font-medium cursor-pointer ${activeTab === tab
+                ? tab === "Tous"
+                  ? "bg-[#4B352A] text-white"
+                  : tab === "Phase A"
                     ? "bg-yellow-600 text-white"
                     : tab === "Phase H"
-                    ? "bg-gray-400 text-white"
-                    : tab === "Phase E"
-                    ? "bg-gray-400 text-white"
-                    : "bg-gray-400 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
+                      ? "bg-gray-400 text-white"
+                      : tab === "Phase E"
+                        ? "bg-gray-400 text-white"
+                        : "bg-gray-400 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
             >
               {tab}
             </button>
@@ -466,7 +465,7 @@ const RecipeInterface = () => {
 
         {/* Action Buttons */}
         <div className="mt-6 flex gap-3">
-          <button className="bg-gray-800 text-white px-6 py-2 rounded hover:bg-gray-700 flex items-center gap-2 cursor-pointer">
+          <button className="bg-[#4B352A] text-white px-6 py-2 rounded hover:bg-gray-700 flex items-center gap-2 cursor-pointer">
             <Save className="w-4 h-4" />
             Sauvegarder
           </button>

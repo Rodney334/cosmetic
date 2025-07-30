@@ -1,35 +1,109 @@
-import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import Link from "next/link";
+import Image from "next/image";
+import { ChevronDown, Eye, EyeOff } from "lucide-react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import axios from "axios";
+import { Toaster } from "react-hot-toast";
+
+import { RegisterDataType } from "@/types/auth.type";
+import { api } from "@/constantes/api.constante";
+import { CustomErrorToast, CustomSuccessToast } from "@/components/CustomToast";
 
 const SignupPage = () => {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    nom: "",
-    prenoms: "",
-    email: "",
-    telephone: "",
-    password: "",
+  const genres = [
+    {
+      label: "Femme",
+      value: "girls"
+    },
+    {
+      label: "Homme",
+      value: "boys"
+    }
+  ];
+
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+
+  // Nettoyage du timeout si le composant est démonté
+  useEffect(() => {
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [timeoutId]);
+
+
+  // Schéma de validation avec Yup
+  const validationSchema = Yup.object().shape({
+    nom: Yup.string().required("Le nom est obligatoire"),
+    prenoms: Yup.string().required("Les prénoms sont obligatoires"),
+    email: Yup.string()
+      .email("Veuillez entrer une adresse email valide")
+      .required("L'email est obligatoire"),
+    telephone: Yup.string()
+      .matches(/^[0-9]+$/, "Le numéro de téléphone ne doit contenir que des chiffres")
+      .min(10, "Le numéro de téléphone doit avoir au moins 10 chiffres")
+      .required("Le téléphone est obligatoire"),
+    password: Yup.string()
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/,
+        "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial"
+      )
+      .required("Le mot de passe est obligatoire"),
+    genre: Yup.string().required("Le genre est obligatoire"),
+    acceptTerms: Yup.boolean()
+      .oneOf([true], "Vous devez accepter les conditions d'utilisation")
+      .required("Vous devez accepter les conditions d'utilisation"),
+    acceptMarketing: Yup.boolean()
+      .oneOf([true], "Vous devez accepter les conditions marketing")
+      .required("Vous devez accepter les conditions marketing"),
   });
-  const [acceptTerms, setAcceptTerms] = useState(false);
-  const [acceptMarketing, setAcceptMarketing] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-  };
+  // Initialisation de Formik
+  const formik = useFormik({
+    initialValues: {
+      nom: "",
+      prenoms: "",
+      email: "",
+      telephone: "",
+      password: "",
+      genre: "",
+      acceptTerms: false,
+      acceptMarketing: false,
+    },
+    validationSchema,
+    onSubmit: (values: RegisterDataType) => {
+      // Ici vous pourriez ajouter votre logique de soumission (API call, etc.)
+      console.log("Form submitted:", values);
+      const validateData = {
+        name: `${values.nom} ${values.prenoms}`,
+        email: values.email,
+        password: values.password,
+        phoneNumber: values.telephone,
+        genderrole: values.genre
+      };
+      axios.post(`${api.base_url}/auth/register`, validateData)
+        .then((data) => {
+          CustomSuccessToast("Inscription réussie ! Redirection en cours...");
+          const id = setTimeout(() => {
+            router.push("/public/login");
+          }, 2000);
+          setTimeoutId(id);
+        })
+        .catch((error) => {
+          console.log("failed :", error);
+          CustomErrorToast("Erreur d'inscription. Veuillez vérifier vos informations.");
+        });
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col md:flex-row justify-center">
+      <Toaster />
       <div className="w-full md:w-1/2 flex flex-col justify-start items-center md:items-start px-6 md:px-16 pt-20 md:pt-28 pb-4 md:pb-12 relative">
         <div className="max-w-md text-center md:text-left">
           <h1 className="text-white text-4xl md:text-5xl font-bold mb-4 leading-tight">
@@ -59,7 +133,7 @@ const SignupPage = () => {
               Créer votre compte
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={formik.handleSubmit} className="space-y-6">
               {/* Nom et Prénoms */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -73,11 +147,17 @@ const SignupPage = () => {
                     type="text"
                     id="nom"
                     name="nom"
-                    value={formData.nom}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                    required
+                    value={formik.values.nom}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full px-4 py-3 border ${formik.touched.nom && formik.errors.nom
+                      ? "border-red-500"
+                      : "border-gray-200"
+                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
                   />
+                  {formik.touched.nom && formik.errors.nom && (
+                    <p className="mt-1 text-sm text-red-600">{formik.errors.nom}</p>
+                  )}
                 </div>
                 <div>
                   <label
@@ -90,11 +170,17 @@ const SignupPage = () => {
                     type="text"
                     id="prenoms"
                     name="prenoms"
-                    value={formData.prenoms}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                    required
+                    value={formik.values.prenoms}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full px-4 py-3 border ${formik.touched.prenoms && formik.errors.prenoms
+                      ? "border-red-500"
+                      : "border-gray-200"
+                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
                   />
+                  {formik.touched.prenoms && formik.errors.prenoms && (
+                    <p className="mt-1 text-sm text-red-600">{formik.errors.prenoms}</p>
+                  )}
                 </div>
               </div>
 
@@ -110,11 +196,17 @@ const SignupPage = () => {
                   type="email"
                   id="email"
                   name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  required
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`w-full px-4 py-3 border ${formik.touched.email && formik.errors.email
+                    ? "border-red-500"
+                    : "border-gray-200"
+                    } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
                 />
+                {formik.touched.email && formik.errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
+                )}
               </div>
 
               {/* Téléphone */}
@@ -134,12 +226,52 @@ const SignupPage = () => {
                     type="tel"
                     id="telephone"
                     name="telephone"
-                    value={formData.telephone}
-                    onChange={handleInputChange}
-                    className="flex-1 px-4 py-3 border border-gray-200 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                    required
+                    value={formik.values.telephone}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`flex-1 px-4 py-3 border ${formik.touched.telephone && formik.errors.telephone
+                      ? "border-red-500"
+                      : "border-gray-200"
+                      } rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
                   />
                 </div>
+                {formik.touched.telephone && formik.errors.telephone && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.telephone}</p>
+                )}
+              </div>
+
+              {/* Genre */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Genre
+                </label>
+                <div className="relative">
+                  <select
+                    id="genre"
+                    name="genre"
+                    value={formik.values.genre}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full px-4 py-3 border ${formik.touched.genre && formik.errors.genre
+                      ? "border-red-500"
+                      : "border-gray-200"
+                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none bg-white`}
+                  >
+                    <option value="">Genre</option>
+                    {genres.map((genre, index) => (
+                      <option key={index} value={genre.value}>
+                        {genre.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+                    size={20}
+                  />
+                </div>
+                {formik.touched.genre && formik.errors.genre && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.genre}</p>
+                )}
               </div>
 
               {/* Password */}
@@ -155,10 +287,13 @@ const SignupPage = () => {
                     type={showPassword ? "text" : "password"}
                     id="password"
                     name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                    required
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full px-4 py-3 pr-12 border ${formik.touched.password && formik.errors.password
+                      ? "border-red-500"
+                      : "border-gray-200"
+                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
                   />
                   <button
                     type="button"
@@ -168,10 +303,13 @@ const SignupPage = () => {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Utilisez 8 caractères ou plus avec des lettres, chiffres &
-                  symboles
-                </p>
+                {formik.touched.password && formik.errors.password ? (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Utilisez 8 caractères ou plus avec des lettres, chiffres & symboles
+                  </p>
+                )}
               </div>
 
               {/* Checkboxes */}
@@ -179,35 +317,45 @@ const SignupPage = () => {
                 <label className="flex items-start space-x-3">
                   <input
                     type="checkbox"
-                    checked={acceptTerms}
-                    onChange={(e) => setAcceptTerms(e.target.checked)}
+                    id="acceptTerms"
+                    name="acceptTerms"
+                    checked={formik.values.acceptTerms}
+                    onChange={formik.handleChange}
                     className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    required
                   />
                   <span className="text-sm text-gray-700">
                     En créant un compte, j'accepte les conditions d'utilisation
                   </span>
                 </label>
+                {formik.touched.acceptTerms && formik.errors.acceptTerms && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.acceptTerms}</p>
+                )}
 
                 <label className="flex items-start space-x-3">
                   <input
                     type="checkbox"
-                    checked={acceptMarketing}
-                    onChange={(e) => setAcceptMarketing(e.target.checked)}
+                    id="acceptMarketing"
+                    name="acceptMarketing"
+                    checked={formik.values.acceptMarketing}
+                    onChange={formik.handleChange}
                     className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">
-                    En créant un compte, j'accepte de recevoir des messages SMS,
-                    e-mails sur les nouveautés, événements et promotions
-                    marketing.
+                    En créant un compte, j'accepte de recevoir des messages SMS, e-mails
+                    sur les nouveautés, événements et promotions marketing.
                   </span>
                 </label>
+                {formik.touched.acceptMarketing && formik.errors.acceptMarketing && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.acceptMarketing}</p>
+                )}
               </div>
+
               <div className="flex items-center justify-between mt-4">
                 {/* Bouton "Créer" */}
                 <button
                   type="submit"
-                  className="bg-gray-400 hover:bg-gray-500 text-white text-sm font-medium py-2.5 px-8 rounded-full transition-colors cursor-pointer"
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-8 rounded-full transition-colors cursor-pointer"
+                // disabled={formik.isSubmitting}
                 >
                   Créer
                 </button>

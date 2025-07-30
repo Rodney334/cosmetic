@@ -6,6 +6,8 @@ import {
   Copy,
   FileText,
   FileSpreadsheet,
+  BookOpen,
+  CircleCheck,
   Trash2,
 } from "lucide-react";
 
@@ -99,11 +101,11 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-              ...phase,
-              ingredients: phase.ingredients.map((ing) =>
-                ing.id === ingredientId ? { ...ing, [field]: value } : ing
-              ),
-            }
+            ...phase,
+            ingredients: phase.ingredients.map((ing) =>
+              ing.id === ingredientId ? { ...ing, [field]: value } : ing
+            ),
+          }
           : phase
       )
     );
@@ -114,18 +116,18 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-              ...phase,
-              ingredients: [
-                ...phase.ingredients,
-                {
-                  id: Date.now() + Math.random(),
-                  name: "",
-                  family: "",
-                  percentage: "",
-                  cost: "",
-                },
-              ],
-            }
+            ...phase,
+            ingredients: [
+              ...phase.ingredients,
+              {
+                id: Date.now() + Math.random(),
+                name: "",
+                family: "",
+                percentage: "",
+                cost: "",
+              },
+            ],
+          }
           : phase
       )
     );
@@ -136,11 +138,11 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-              ...phase,
-              ingredients: phase.ingredients.filter(
-                (ing) => ing.id !== ingredientId
-              ),
-            }
+            ...phase,
+            ingredients: phase.ingredients.filter(
+              (ing) => ing.id !== ingredientId
+            ),
+          }
           : phase
       )
     );
@@ -305,11 +307,10 @@ const RecipeInterface = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded font-medium cursor-pointer ${
-                activeTab === tab
-                  ? "bg-gray-800 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
+              className={`px-4 py-2 rounded font-medium cursor-pointer ${activeTab === tab
+                ? "bg-gray-800 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
             >
               {tab}
             </button>
@@ -336,11 +337,10 @@ const RecipeInterface = () => {
                     <button
                       key={index}
                       onClick={() => setSelectedCategory(category)}
-                      className={`w-full p-3 text-left text-sm hover:bg-blue-50 cursor-pointer ${
-                        selectedCategory === category
-                          ? "bg-blue-100 text-blue-800"
-                          : "text-gray-700"
-                      }`}
+                      className={`w-full p-3 text-left text-sm hover:bg-blue-50 cursor-pointer ${selectedCategory === category
+                        ? "bg-blue-100 text-blue-800"
+                        : "text-gray-700"
+                        }`}
                     >
                       {category}
                     </button>
@@ -402,21 +402,15 @@ const RecipeInterface = () => {
                           {ingredient.gouttes}
                         </div>
                         <div className="p-2 border-r border-gray-300 flex justify-center min-w-[80px]">
-                          <button className="w-6 h-6 border-2 border-gray-400 rounded-full flex items-center justify-center hover:bg-green-100 text-gray-600 font-bold text-sm cursor-pointer">
+                          <CircleCheck className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-green-100 text-gray-600 font-bold text-sm cursor-pointer" />
+                          {/* <button className="w-6 h-6 border-2 border-gray-400 rounded-full flex items-center justify-center hover:bg-green-100 text-gray-600 font-bold text-sm cursor-pointer">
                             +
-                          </button>
+                          </button> */}
                         </div>
                         <div className="p-2 flex justify-center min-w-[80px]">
-                          <button className="w-6 h-6 bg-orange-200 border border-orange-400 rounded flex items-center justify-center hover:bg-orange-300 cursor-pointer">
-                            <svg
-                              className="w-3 h-3 text-orange-800"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm0 2h12v10H4V5z" />
-                              <path d="M6 7h8v1H6V7zm0 2h8v1H6V9zm0 2h6v1H6v-1z" />
-                            </svg>
-                          </button>
+                          <BookOpen className="h-6 w-6 p-0.5 bg-white border border-black rounded-md flex items-center justify-center hover:bg-gray-200 cursor-pointer" />
+                          {/* <button className="w-6 h-6 p-1 bg-white border border-black rounded-md flex items-center justify-center hover:bg-gray-200 cursor-pointer">
+                          </button> */}
                         </div>
                       </div>
                     </div>

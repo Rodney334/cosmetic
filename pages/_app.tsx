@@ -1,5 +1,6 @@
 import type { AppProps } from 'next/app';
 import { ReactElement } from 'react';
+import { SessionProvider } from 'next-auth/react';
 import Layout from '@/layouts/Layout';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import '@/styles/globals.css';
@@ -11,7 +12,7 @@ type AppPropsWithLayout = AppProps & {
   };
 };
 
-export default function App({ Component, pageProps }: AppPropsWithLayout) {
+export default function App({ Component, pageProps: { session, ...pageProps } }: AppPropsWithLayout) {
   // Détermine automatiquement le layout en fonction du chemin
   const getLayout = Component.getLayout || ((page) => {
     return Component.isDashboard
@@ -19,14 +20,14 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
       : <Layout>{page}</Layout>;
   });
 
-  return getLayout(<Component {...pageProps} />);
+  // return getLayout(<Component {...pageProps} />);
+  return (
+    <SessionProvider session={session}>
+      {getLayout(<Component {...pageProps} />)}
+    </SessionProvider>
+  );
 }
 
-// return (
-//   <SessionProvider session={session}>
-//     {getLayout(<Component {...pageProps} />)}
-//   </SessionProvider>
-// );
 
 // // /pages/_app.tsx
 // import { SessionProvider } from 'next-auth/react';
