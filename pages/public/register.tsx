@@ -18,12 +18,12 @@ const SignupPage = () => {
   const genres = [
     {
       label: "Femme",
-      value: "girls"
+      value: "girls",
     },
     {
       label: "Homme",
-      value: "boys"
-    }
+      value: "boys",
+    },
   ];
 
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
@@ -35,7 +35,6 @@ const SignupPage = () => {
     };
   }, [timeoutId]);
 
-
   // Schéma de validation avec Yup
   const validationSchema = Yup.object().shape({
     nom: Yup.string().required("Le nom est obligatoire"),
@@ -44,7 +43,10 @@ const SignupPage = () => {
       .email("Veuillez entrer une adresse email valide")
       .required("L'email est obligatoire"),
     telephone: Yup.string()
-      .matches(/^[0-9]+$/, "Le numéro de téléphone ne doit contenir que des chiffres")
+      .matches(
+        /^[0-9]+$/,
+        "Le numéro de téléphone ne doit contenir que des chiffres"
+      )
       .min(10, "Le numéro de téléphone doit avoir au moins 10 chiffres")
       .required("Le téléphone est obligatoire"),
     password: Yup.string()
@@ -84,19 +86,22 @@ const SignupPage = () => {
         email: values.email,
         password: values.password,
         phoneNumber: values.telephone,
-        genderrole: values.genre
+        genderrole: values.genre,
       };
-      axios.post(`${api.base_url}/auth/register`, validateData)
-        .then((data) => {
+      axios
+        .post(`${api.base_url}/auth/register`, validateData)
+        .then((data: any) => {
           CustomSuccessToast("Inscription réussie ! Redirection en cours...");
           const id = setTimeout(() => {
             router.push("/public/login");
           }, 2000);
           setTimeoutId(id);
         })
-        .catch((error) => {
+        .catch((error: any) => {
           console.log("failed :", error);
-          CustomErrorToast("Erreur d'inscription. Veuillez vérifier vos informations.");
+          CustomErrorToast(
+            "Erreur d'inscription. Veuillez vérifier vos informations."
+          );
         });
     },
   });
@@ -150,13 +155,16 @@ const SignupPage = () => {
                     value={formik.values.nom}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border ${formik.touched.nom && formik.errors.nom
-                      ? "border-red-500"
-                      : "border-gray-200"
-                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
+                    className={`w-full px-4 py-3 border ${
+                      formik.touched.nom && formik.errors.nom
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
                   />
                   {formik.touched.nom && formik.errors.nom && (
-                    <p className="mt-1 text-sm text-red-600">{formik.errors.nom}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.nom}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -173,13 +181,16 @@ const SignupPage = () => {
                     value={formik.values.prenoms}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border ${formik.touched.prenoms && formik.errors.prenoms
-                      ? "border-red-500"
-                      : "border-gray-200"
-                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
+                    className={`w-full px-4 py-3 border ${
+                      formik.touched.prenoms && formik.errors.prenoms
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
                   />
                   {formik.touched.prenoms && formik.errors.prenoms && (
-                    <p className="mt-1 text-sm text-red-600">{formik.errors.prenoms}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.prenoms}
+                    </p>
                   )}
                 </div>
               </div>
@@ -199,13 +210,16 @@ const SignupPage = () => {
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`w-full px-4 py-3 border ${formik.touched.email && formik.errors.email
-                    ? "border-red-500"
-                    : "border-gray-200"
-                    } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
+                  className={`w-full px-4 py-3 border ${
+                    formik.touched.email && formik.errors.email
+                      ? "border-red-500"
+                      : "border-gray-200"
+                  } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
                 />
                 {formik.touched.email && formik.errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {formik.errors.email}
+                  </p>
                 )}
               </div>
 
@@ -229,14 +243,17 @@ const SignupPage = () => {
                     value={formik.values.telephone}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`flex-1 px-4 py-3 border ${formik.touched.telephone && formik.errors.telephone
-                      ? "border-red-500"
-                      : "border-gray-200"
-                      } rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
+                    className={`flex-1 px-4 py-3 border ${
+                      formik.touched.telephone && formik.errors.telephone
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
                   />
                 </div>
                 {formik.touched.telephone && formik.errors.telephone && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.telephone}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {formik.errors.telephone}
+                  </p>
                 )}
               </div>
 
@@ -252,10 +269,11 @@ const SignupPage = () => {
                     value={formik.values.genre}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border ${formik.touched.genre && formik.errors.genre
-                      ? "border-red-500"
-                      : "border-gray-200"
-                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none bg-white`}
+                    className={`w-full px-4 py-3 border ${
+                      formik.touched.genre && formik.errors.genre
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none bg-white`}
                   >
                     <option value="">Genre</option>
                     {genres.map((genre, index) => (
@@ -270,7 +288,9 @@ const SignupPage = () => {
                   />
                 </div>
                 {formik.touched.genre && formik.errors.genre && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.genre}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {formik.errors.genre}
+                  </p>
                 )}
               </div>
 
@@ -290,10 +310,11 @@ const SignupPage = () => {
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 pr-12 border ${formik.touched.password && formik.errors.password
-                      ? "border-red-500"
-                      : "border-gray-200"
-                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
+                    className={`w-full px-4 py-3 pr-12 border ${
+                      formik.touched.password && formik.errors.password
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all`}
                   />
                   <button
                     type="button"
@@ -304,10 +325,13 @@ const SignupPage = () => {
                   </button>
                 </div>
                 {formik.touched.password && formik.errors.password ? (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {formik.errors.password}
+                  </p>
                 ) : (
                   <p className="text-xs text-gray-500 mt-1">
-                    Utilisez 8 caractères ou plus avec des lettres, chiffres & symboles
+                    Utilisez 8 caractères ou plus avec des lettres, chiffres &
+                    symboles
                   </p>
                 )}
               </div>
@@ -328,7 +352,9 @@ const SignupPage = () => {
                   </span>
                 </label>
                 {formik.touched.acceptTerms && formik.errors.acceptTerms && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.acceptTerms}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {formik.errors.acceptTerms}
+                  </p>
                 )}
 
                 <label className="flex items-start space-x-3">
@@ -341,13 +367,17 @@ const SignupPage = () => {
                     className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">
-                    En créant un compte, j'accepte de recevoir des messages SMS, e-mails
-                    sur les nouveautés, événements et promotions marketing.
+                    En créant un compte, j'accepte de recevoir des messages SMS,
+                    e-mails sur les nouveautés, événements et promotions
+                    marketing.
                   </span>
                 </label>
-                {formik.touched.acceptMarketing && formik.errors.acceptMarketing && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.acceptMarketing}</p>
-                )}
+                {formik.touched.acceptMarketing &&
+                  formik.errors.acceptMarketing && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.acceptMarketing}
+                    </p>
+                  )}
               </div>
 
               <div className="flex items-center justify-between mt-4">
@@ -355,7 +385,7 @@ const SignupPage = () => {
                 <button
                   type="submit"
                   className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-8 rounded-full transition-colors cursor-pointer"
-                // disabled={formik.isSubmitting}
+                  // disabled={formik.isSubmitting}
                 >
                   Créer
                 </button>
