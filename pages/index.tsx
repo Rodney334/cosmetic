@@ -1,19 +1,22 @@
-// import { useIngredientStore } from "@/stores/ingredient.store";
-// import { useSession } from "next-auth/react";
+import { useIngredientStore } from "@/stores/ingredient.store";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-// import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 const HomePage = () => {
-  // const { data: session } = useSession();
-  // const { getAllIngredient, groupIngredientsByCategoryMap } =
-  //   useIngredientStore();
+  const { data: session } = useSession();
+  const { getAllIngredient, groupIngredientsByCategory } = useIngredientStore();
 
-  // useEffect(() => {
-  //   if (session && session.accessToken) {
-  //     getAllIngredient(session.accessToken);
-  //     groupIngredientsByCategoryMap();
-  //   }
-  // }, [session]);
+  const getIngredient = useMemo(() => {
+    if (session && session.accessToken) {
+      getAllIngredient(session.accessToken);
+      groupIngredientsByCategory(session.accessToken);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    getIngredient;
+  });
   return (
     <div className="min-h-screen bg-[#4B352A] opacity-80 p-6 py-24">
       <div className="max-w-6xl mx-auto pt-20 space-y-10 bg-white rounded-lg w-full px-6 md:px-12 py-10">
@@ -92,7 +95,7 @@ const HomePage = () => {
 
           <div className="mt-6 flex justify-start">
             <Link
-              href={"/public/recetteCreate"}
+              href={"/public/recette-create"}
               className="bg-[#4B352A] hover:bg-[#3e2d22] text-white px-6 py-3 rounded-lg font-semibold transition duration-200 cursor-pointer"
             >
               Commencer

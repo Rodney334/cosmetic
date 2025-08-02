@@ -32,7 +32,7 @@ export const CustomErrorToast = (text: string) => {
       duration: 5000,
       position: "top-center",
       style: {
-        backgroundColor: "#FF0033",
+        backgroundColor: "#DA3030",
         color: "#fff",
         minWidth: "400px",
         borderRadius: "12px",

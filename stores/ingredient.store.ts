@@ -1,20 +1,26 @@
 import { CustomErrorToast } from "@/components/CustomToast";
 import { api } from "@/constantes/api.constante";
-import { IngredientType } from "@/types/ingredient.type";
-import axios from "axios";
+import {
+  IngredientByCategorieType,
+  IngredientType,
+} from "@/types/ingredient.type";
+import axios, { AxiosResponse } from "axios";
 import { create } from "zustand";
 
 interface IngredientStoreInterface {
   ingredientAll: IngredientType[];
-  ingredientsByCategoryMap: Map<string, IngredientType[]>;
+  ingredientsByCategory: IngredientByCategorieType[];
+  ingredientsByPhase: IngredientByCategorieType[];
   getAllIngredient: (token: string) => Promise<void>;
-  groupIngredientsByCategoryMap: () => void;
+  groupIngredientsByCategory: (token: string) => Promise<void>;
+  groupIngredientsByPhase: (token: string, phaseId: string) => Promise<void>;
 }
 
 export const useIngredientStore = create<IngredientStoreInterface>(
   (set, get) => ({
     ingredientAll: [],
-    ingredientsByCategoryMap: new Map(),
+    ingredientsByCategory: [],
+    ingredientsByPhase: [],
 
     getAllIngredient: async (token: string) => {
       try {
@@ -23,28 +29,57 @@ export const useIngredientStore = create<IngredientStoreInterface>(
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log(response.data);
+        // console.log(response.data);
         set({ ingredientAll: response.data });
       } catch (error) {
         CustomErrorToast("Ingrédient erreur système");
       }
     },
 
-    groupIngredientsByCategoryMap: () => {
-      const { ingredientAll } = get();
-      if (ingredientAll.length === 0) return new Map<"", []>();
-      const ingredientMap = ingredientAll.reduce((map, ingredient) => {
-        const categoryName = ingredient.categorie.nom;
+    groupIngredientsByCategory: async (token: string) => {
+      try {
+        const response: AxiosResponse<IngredientByCategorieType[]> =
+          await axios.get(
+            `${api.base_url}/ingredientcategorie/grouped-by-category`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        // console.log(response.data);
+        const sortedData = response.data.sort((a, b) =>
+          a.category.nom.localeCompare(b.category.nom, "fr", {
+            sensitivity: "base",
+          })
+        );
+        set({ ingredientsByCategory: sortedData });
+      } catch (error) {
+        CustomErrorToast("Ingrédient par groupe erreur système");
+      }
+    },
 
-        if (!map.has(categoryName)) {
-          map.set(categoryName, []);
-        }
-
-        map.get(categoryName)!.push(ingredient);
-        return map;
-      }, new Map<string, IngredientType[]>());
-      console.log("ingredientMap:", ingredientMap);
-      set({ ingredientsByCategoryMap: ingredientMap });
+    groupIngredientsByPhase: async (token: string, phaseId: string) => {
+      try {
+        const response: AxiosResponse<IngredientByCategorieType[]> =
+          await axios.get(
+            `${api.base_url}/phase/${phaseId}/allowed-ingredients`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        // console.log(response.data);
+        const sortedData = response.data.sort((a, b) =>
+          a.category.nom.localeCompare(b.category.nom, "fr", {
+            sensitivity: "base",
+          })
+        );
+        set({ ingredientsByCategory: sortedData });
+      } catch (error) {
+        CustomErrorToast("Catégorie par phase erreur système");
+      }
     },
   })
 );

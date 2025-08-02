@@ -20,6 +20,7 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (response.data) {
+            console.log(response.data);
             // Return object must match NextAuth's User type
             return {
               id: response.data.user.id, // Required field

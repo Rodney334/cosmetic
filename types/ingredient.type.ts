@@ -1,4 +1,4 @@
-export type CategorieIngredient = {
+export type CategorieIngredientType = {
   _id: string;
   nom: string;
   createdAt: string;
@@ -10,7 +10,7 @@ export type IngredientType = {
   _id: string;
   nom: string;
   inci: string;
-  categorie: CategorieIngredient;
+  categorie: CategorieIngredientType;
   forme: string;
   description: string;
   unitesDisponibles: string[];
@@ -24,4 +24,9 @@ export type IngredientType = {
   __v: number;
   createdAt: string;
   updatedAt: string;
+};
+
+export type IngredientByCategorieType = {
+  category: CategorieIngredientType;
+  ingredients: IngredientType[];
 };

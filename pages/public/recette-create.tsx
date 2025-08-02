@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   Calculator,
@@ -10,6 +10,9 @@ import {
   CircleCheck,
   Trash2,
 } from "lucide-react";
+import { useIngredientStore } from "@/stores/ingredient.store";
+import { useSession } from "next-auth/react";
+import { usePhaseStore } from "@/stores/phase.store";
 
 // Types définis pour corriger les erreurs TypeScript
 interface Ingredient {
@@ -27,6 +30,35 @@ interface PhaseData {
 }
 
 const RecipeInterface = () => {
+  const { data: session } = useSession();
+  const {
+    ingredientAll,
+    ingredientsByCategory,
+    getAllIngredient,
+    groupIngredientsByCategory,
+    groupIngredientsByPhase,
+  } = useIngredientStore();
+
+  const { phaseAll, getAllPhase } = usePhaseStore();
+
+  const getIngredient = useMemo(() => {
+    if (session && session.accessToken) {
+      getAllIngredient(session.accessToken);
+      groupIngredientsByCategory(session.accessToken);
+    }
+  }, [session]);
+
+  const getPhase = useMemo(() => {
+    if (session && session.accessToken) {
+      getAllPhase(session.accessToken);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    getIngredient;
+    getPhase;
+  });
+
   const [recipeName, setRecipeName] = useState<string>("");
   const [description, setDescription] = useState<string>(
     "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nNunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
@@ -101,11 +133,11 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-            ...phase,
-            ingredients: phase.ingredients.map((ing) =>
-              ing.id === ingredientId ? { ...ing, [field]: value } : ing
-            ),
-          }
+              ...phase,
+              ingredients: phase.ingredients.map((ing) =>
+                ing.id === ingredientId ? { ...ing, [field]: value } : ing
+              ),
+            }
           : phase
       )
     );
@@ -116,18 +148,18 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-            ...phase,
-            ingredients: [
-              ...phase.ingredients,
-              {
-                id: Date.now() + Math.random(),
-                name: "",
-                family: "",
-                percentage: "",
-                cost: "",
-              },
-            ],
-          }
+              ...phase,
+              ingredients: [
+                ...phase.ingredients,
+                {
+                  id: Date.now() + Math.random(),
+                  name: "",
+                  family: "",
+                  percentage: "",
+                  cost: "",
+                },
+              ],
+            }
           : phase
       )
     );
@@ -138,11 +170,11 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-            ...phase,
-            ingredients: phase.ingredients.filter(
-              (ing) => ing.id !== ingredientId
-            ),
-          }
+              ...phase,
+              ingredients: phase.ingredients.filter(
+                (ing) => ing.id !== ingredientId
+              ),
+            }
           : phase
       )
     );
@@ -307,10 +339,11 @@ const RecipeInterface = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded font-medium cursor-pointer ${activeTab === tab
-                ? "bg-gray-800 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
+              className={`px-4 py-2 rounded font-medium cursor-pointer ${
+                activeTab === tab
+                  ? "bg-gray-800 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
             >
               {tab}
             </button>
@@ -333,18 +366,22 @@ const RecipeInterface = () => {
               {/* Categories List with scroll */}
               <div className="flex-1 overflow-y-auto">
                 <div className="divide-y divide-gray-200">
-                  {categories.map((category, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`w-full p-3 text-left text-sm hover:bg-blue-50 cursor-pointer ${selectedCategory === category
-                        ? "bg-blue-100 text-blue-800"
-                        : "text-gray-700"
-                        }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
+                  {ingredientsByCategory &&
+                    ingredientsByCategory.map((item, index) => {
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedCategory(item.category._id)}
+                          className={`w-full p-3 text-left text-sm hover:bg-blue-50 cursor-pointer ${
+                            selectedCategory === item.category._id
+                              ? "bg-blue-100 text-blue-800"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {item.category.nom}
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
             </div>
