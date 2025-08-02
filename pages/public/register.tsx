@@ -120,7 +120,7 @@ const SignupPage = () => {
         </div>
 
         {/* Geometric figure */}
-        <div className="mt-8 md:mt-0 md:absolute md:bottom-64 md:left-16">
+        <div className="mt-8 md:mt-0 md:absolute md:bottom-80 md:left-16">
           <Image
             src="/assets/fg_geometric.png"
             alt="Geometric figure"
@@ -129,7 +129,7 @@ const SignupPage = () => {
             className="mx-auto md:mx-0"
           />
         </div>
-      </div>
+      </div>ù
 
       <div className="w-full md:w-1/2 flex items-center justify-center px-4 mt-8 md:px-8 py-12">
         <div className="w-full max-w-md">

@@ -76,9 +76,9 @@ const IngredientsInterface = () => {
               className={`px-4 py-2 rounded font-medium cursor-pointer ${
                 activeTab === tab
                   ? tab === "Tous"
-                    ? "bg-gray-700 text-white"
+                    ? "bg-[#4B352A] text-white"
                     : tab === "Phase A"
-                    ? "bg-gray-700 text-white"
+                    ? "bg-[#4B352A] text-white"
                     : "bg-gray-400 text-white"
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
@@ -98,7 +98,7 @@ const IngredientsInterface = () => {
           {/* Left Panel - Categories */}
           <div className="w-64 bg-white rounded">
             {/* Categories Header */}
-            <div className="bg-gray-400 text-white p-3 text-center font-medium rounded-t">
+            <div className="bg-[#4B352A] text-white p-3 text-center font-medium rounded-t">
               Famille / Catégories
             </div>
 
@@ -125,7 +125,7 @@ const IngredientsInterface = () => {
             {/* Container with fixed dimensions and scroll */}
             <div className="min-w-[600px] flex-1 flex flex-col overflow-hidden">
               {/* Table Header - Sticky */}
-              <div className="bg-gray-400 text-white sticky top-0 z-10">
+              <div className="bg-[#4B352A] text-white sticky top-0 z-10">
                 <div className="grid grid-cols-5 gap-0">
                   <div className="p-3 text-center font-medium border-r border-gray-300 min-w-[180px]">
                     Ingrédients
@@ -350,7 +350,7 @@ const IngredientsInterface = () => {
 
             {/* Add Button */}
             <div className="flex justify-end pt-4">
-              <button className="bg-gray-800 text-white px-8 py-3 rounded hover:bg-gray-700 cursor-pointer">
+              <button className="bg-[#4B352A] text-white px-8 py-3 rounded hover:bg-gray-700 cursor-pointer">
                 Ajouter
               </button>
             </div>

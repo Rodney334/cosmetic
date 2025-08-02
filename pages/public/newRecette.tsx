@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import {
-  Plus,
   Calculator,
   Save,
   Copy,
   FileText,
   FileSpreadsheet,
   Trash2,
+  Camera,
 } from "lucide-react";
 
 // Types définis pour corriger les erreurs TypeScript
@@ -73,11 +73,11 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-            ...phase,
-            ingredients: phase.ingredients.map((ing) =>
-              ing.id === ingredientId ? { ...ing, [field]: value } : ing
-            ),
-          }
+              ...phase,
+              ingredients: phase.ingredients.map((ing) =>
+                ing.id === ingredientId ? { ...ing, [field]: value } : ing
+              ),
+            }
           : phase
       )
     );
@@ -88,18 +88,18 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-            ...phase,
-            ingredients: [
-              ...phase.ingredients,
-              {
-                id: Date.now() + Math.random(),
-                name: "",
-                family: "",
-                percentage: "",
-                cost: "",
-              },
-            ],
-          }
+              ...phase,
+              ingredients: [
+                ...phase.ingredients,
+                {
+                  id: Date.now() + Math.random(),
+                  name: "",
+                  family: "",
+                  percentage: "",
+                  cost: "",
+                },
+              ],
+            }
           : phase
       )
     );
@@ -110,11 +110,11 @@ const RecipeInterface = () => {
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
-            ...phase,
-            ingredients: phase.ingredients.filter(
-              (ing) => ing.id !== ingredientId
-            ),
-          }
+              ...phase,
+              ingredients: phase.ingredients.filter(
+                (ing) => ing.id !== ingredientId
+              ),
+            }
           : phase
       )
     );
@@ -162,18 +162,40 @@ const RecipeInterface = () => {
 
         {/* Description */}
         <div className="mb-6 flex gap-4">
-          <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
-            <Plus className="w-8 h-8 text-white bg-gray-600 rounded-full p-1" />
+          <div className="w-24 h-24 bg-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              id="image-upload"
+              onChange={(e) => {
+                // Handle image upload here
+                const file = e.target.files?.[0];
+                if (file) {
+                  // Process the uploaded image
+                  console.log("Image uploaded:", file);
+                }
+              }}
+            />
+            <label
+              htmlFor="image-upload"
+              className="cursor-pointer flex flex-col items-center justify-center w-full h-full"
+            >
+              <Camera className="w-6 h-6 text-gray-500 mb-1" />
+              <span className="text-xs text-gray-500">Image</span>
+            </label>
           </div>
-          <div className="flex-1">
+
+          <div className="flex-1 h-24">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg h-24 resize-none"
+              className="w-full p-3 border border-gray-300 rounded-lg resize-none h-full"
               placeholder="Description de la recette..."
+              style={{ height: "calc(100% - 1.75rem)" }}
             />
           </div>
         </div>
@@ -275,18 +297,19 @@ const RecipeInterface = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded font-medium cursor-pointer ${activeTab === tab
-                ? tab === "Tous"
-                  ? "bg-[#4B352A] text-white"
-                  : tab === "Phase A"
-                    ? "bg-yellow-600 text-white"
+              className={`px-4 py-2 rounded font-medium cursor-pointer ${
+                activeTab === tab
+                  ? tab === "Tous"
+                    ? "bg-[#4B352A] text-white"
+                    : tab === "Phase A"
+                    ? "bg-[#4B352A] text-white"
                     : tab === "Phase H"
-                      ? "bg-gray-400 text-white"
-                      : tab === "Phase E"
-                        ? "bg-gray-400 text-white"
-                        : "bg-gray-400 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
+                    ? "bg-gray-400 text-white"
+                    : tab === "Phase E"
+                    ? "bg-gray-400 text-white"
+                    : "bg-gray-400 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
             >
               {tab}
             </button>
@@ -302,7 +325,7 @@ const RecipeInterface = () => {
           <div className="max-h-96 overflow-auto">
             <div className="min-w-[800px]">
               {/* Table Header - Sticky */}
-              <div className="bg-gray-400 text-white sticky top-0 z-10">
+              <div className="bg-[#4B352A] text-white sticky top-0 z-10">
                 <div className="grid grid-cols-6 gap-0">
                   <div className="p-3 text-center font-medium border-r border-gray-300 min-w-[150px]">
                     Ingrédients

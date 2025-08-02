@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { HiUser } from "react-icons/hi";
@@ -7,6 +8,7 @@ import { HiUser } from "react-icons/hi";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { data: session, status } = useSession();
+  const router = useRouter();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -14,6 +16,28 @@ const Header = () => {
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  // Fonction pour vérifier si un lien est actif
+  const isActiveLink = (href: string) => {
+    return router.pathname === href;
+  };
+
+  // Classes pour les liens actifs et inactifs
+  const getLinkClasses = (href: string, isMobile: boolean = false) => {
+    const baseClasses = isMobile 
+      ? "block px-3 py-2 rounded-md transition-colors" 
+      : "transition-colors";
+    
+    const activeClasses = isMobile
+      ? "text-[#4B352A] bg-[#4B352A]font-medium"
+      : "text-[#4B352A] font-bold border-b-2 border-[#4B352A] pb-1";
+    
+    const inactiveClasses = isMobile
+      ? "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+      : "text-gray-600 hover:text-gray-900";
+
+    return `${baseClasses} ${isActiveLink(href) ? activeClasses : inactiveClasses}`;
   };
 
   return (
@@ -27,25 +51,25 @@ const Header = () => {
             <nav className="hidden md:flex space-x-6">
               <Link
                 href="/public/recette"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className={getLinkClasses("/public/recette")}
               >
                 Mes Recettes
               </Link>
               <Link
                 href="/public/ingredient"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className={getLinkClasses("/public/ingredient")}
               >
                 Ingrédients
               </Link>
               <Link
                 href="/public/newRecette"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className={getLinkClasses("/public/newRecette")}
               >
                 Nouvelle Recette
               </Link>
               <Link
                 href="/public/blog"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className={getLinkClasses("/public/blog")}
               >
                 Guide
               </Link>
@@ -97,28 +121,28 @@ const Header = () => {
               <Link
                 href="/public/recette"
                 onClick={closeMenu}
-                className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                className={getLinkClasses("/public/recette", true)}
               >
                 Mes Recettes
               </Link>
               <Link
                 href="/public/ingredient"
                 onClick={closeMenu}
-                className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                className={getLinkClasses("/public/ingredient", true)}
               >
                 Ingrédients
               </Link>
               <Link
                 href="/public/newRecette"
                 onClick={closeMenu}
-                className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                className={getLinkClasses("/public/newRecette", true)}
               >
                 Nouvelle Recette
               </Link>
               <Link
                 href="/public/blog"
                 onClick={closeMenu}
-                className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                className={getLinkClasses("/public/blog", true)}
               >
                 Guide
               </Link>
