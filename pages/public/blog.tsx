@@ -145,7 +145,7 @@ const CosmeticBlog: React.FC = () => {
                   <h3 className="text-lg font-bold text-black mb-2">
                     {article.title}
                   </h3>
-                  <div className="flex items-center space-x-2 text-sm text-white">
+                  <div className="flex items-center space-x-2 text-sm text-black">
                     <span>{article.duration}</span>
                     <span>•</span>
                     <span>{article.date}</span>

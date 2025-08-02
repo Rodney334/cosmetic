@@ -258,7 +258,7 @@ const RecipeInterface = () => {
             </select>
             <span className="text-gray-600">(= {calculatedTotal} ml)</span>
           </div>
-          <button className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 cursor-pointer">
+          <button className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#3e2b22] cursor-pointer">
             Valider
           </button>
         </div>
@@ -327,7 +327,7 @@ const RecipeInterface = () => {
               className="w-full p-3 border border-gray-300 rounded-lg"
             />
           </div>
-          <button className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 flex items-center gap-2 cursor-pointer">
+          <button className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer">
             <Calculator className="w-4 h-4" />
             Calculer
           </button>
@@ -341,7 +341,7 @@ const RecipeInterface = () => {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded font-medium cursor-pointer ${
                 activeTab === tab
-                  ? "bg-gray-800 text-white"
+                  ? "bg-[#4B352A] text-white"
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
@@ -359,7 +359,7 @@ const RecipeInterface = () => {
             {/* Left Panel - Categories */}
             <div className="w-64 bg-white rounded flex flex-col overflow-hidden">
               {/* Categories Header */}
-              <div className="bg-gray-400 text-white p-3 text-center font-medium">
+              <div className="bg-[#4B352A] text-white p-3 text-center font-medium">
                 Famille / Catégories
               </div>
 
@@ -485,7 +485,7 @@ const RecipeInterface = () => {
 
         {/* Action Buttons */}
         <div className="mt-6 flex gap-3">
-          <button className="bg-gray-800 text-white px-6 py-2 rounded hover:bg-gray-700 flex items-center gap-2 cursor-pointer">
+          <button className="bg-[#4B352A] text-white px-6 py-2 rounded hover:bg-[#3e2b22] flex items-center gap-2 cursor-pointer">
             <Save className="w-4 h-4" />
             Sauvegarder
           </button>
