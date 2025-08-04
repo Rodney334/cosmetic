@@ -1,4 +1,5 @@
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, UserCircle } from "lucide-react";
+import Link from "next/link";
 export default function DashboardHeader() {
   return (
     <header className="bg-white shadow-sm">
@@ -18,7 +19,9 @@ export default function DashboardHeader() {
             <button className="p-2 rounded-full hover:bg-gray-100">
               <Bell className="h-5 w-5" />
             </button>
-            <div className="h-8 w-8 rounded-full bg-gray-300"></div>
+            <Link href={"/private/profil"}>
+              <UserCircle className="h-8 w-8 rounded-full" />
+            </Link>
           </div>
         </div>
       </div>

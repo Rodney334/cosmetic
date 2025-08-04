@@ -7,30 +7,15 @@ export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   isDashboard?: boolean;
 };
 
-// declare module "next-auth" {
-//   interface User extends DefaultUser {
-//     accessToken?: string;
-//     refreshToken?: string;
-//     // Ajoutez d'autres champs si nécessaire
-//   }
-
-//   interface Session extends DefaultSession {
-//     user: User;
-//     accessToken?: string;
-//     refreshToken?: string;
-//   }
-// }
-
 declare module "next-auth" {
   interface User extends DefaultUser {
+    id: string;
     accessToken?: string;
     refreshToken?: string;
   }
 
   interface Session extends DefaultSession {
-    user: User & {
-      id: string; // Assurez-vous que l'ID est bien présent sur l'utilisateur de la session
-    };
+    user: User;
     accessToken?: string;
     refreshToken?: string;
   }
@@ -38,6 +23,7 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
+    id: string;
     accessToken?: string;
     refreshToken?: string;
   }

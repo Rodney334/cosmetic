@@ -20,13 +20,11 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (response.data) {
-            console.log(response.data);
             // Return object must match NextAuth's User type
             return {
-              id: response.data.user.id, // Required field
+              id: response.data.user._id, // Required field
               email: response.data.user.email,
               name: response.data.user.name || "",
-              // Include tokens in the user object
               accessToken: response.data.accessToken,
               refreshToken: response.data.refreshToken,
             };

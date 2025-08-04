@@ -32,7 +32,7 @@ const Login = () => {
     password: Yup.string()
       .min(8, "Le mot de passe doit contenir au moins 8 caractères")
       .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/,
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/, // (?=.*[!@#$%^&*])
         "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial"
       )
       .required("Le mot de passe est obligatoire"),
@@ -46,8 +46,8 @@ const Login = () => {
 
   const formik = useFormik({
     initialValues: {
-      email: "rodneyvodounnou@gmail.com",
-      password: "Azerty123@",
+      email: "lofun90@gmail.com", // "rodneyvodounnou@gmail.com",
+      password: "Babatounde1998", // "Azerty123@",
     },
     validationSchema,
     onSubmit: async (values: LoginDataType) => {
@@ -126,6 +126,11 @@ const Login = () => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                     required
                   />
+                  {formik.touched.email && formik.errors.email && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.email}
+                    </p>
+                  )}
                 </div>
 
                 <div className="relative">
@@ -158,16 +163,20 @@ const Login = () => {
                       <Eye className="w-5 h-5" />
                     )}
                   </button>
+                  {formik.touched.password && formik.errors.password && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {formik.errors.password}
+                    </p>
+                  )}
                 </div>
 
                 <div className="text-right">
-                  <button
-                    type="button"
+                  <Link
+                    href={"/public/forget-password"}
                     className="text-sm text-blue-600 hover:text-blue-800 underline cursor-pointer"
-                    onClick={() => alert("Mot de passe oublié ?")}
                   >
                     Mot de passe oublié
-                  </button>
+                  </Link>
                 </div>
 
                 <button

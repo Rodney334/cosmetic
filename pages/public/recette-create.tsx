@@ -9,10 +9,19 @@ import {
   BookOpen,
   CircleCheck,
   Trash2,
+  Camera,
 } from "lucide-react";
 import { useIngredientStore } from "@/stores/ingredient.store";
 import { useSession } from "next-auth/react";
 import { usePhaseStore } from "@/stores/phase.store";
+import { RecetteTab } from "@/components/RecetteTabComponent";
+import { PhaseData } from "@/types/recipe.type";
+import { PhaseType } from "@/types/phase.type";
+import {
+  IngredientByCategorieType,
+  IngredientType,
+} from "@/types/ingredient.type";
+import { PhaseTab } from "@/components/PhaseTabComponent";
 
 // Types définis pour corriger les erreurs TypeScript
 interface Ingredient {
@@ -21,12 +30,6 @@ interface Ingredient {
   family: string;
   percentage: string;
   cost: string;
-}
-
-interface PhaseData {
-  phase: string;
-  title: string;
-  ingredients: Ingredient[];
 }
 
 const RecipeInterface = () => {
@@ -41,23 +44,32 @@ const RecipeInterface = () => {
 
   const { phaseAll, getAllPhase } = usePhaseStore();
 
-  const getIngredient = useMemo(() => {
+  // Structure des phases avec lignes vides par défaut
+  const [phaseData, setPhaseData] = useState<PhaseData[]>([]);
+  const [currentPhase, setCurrentPhase] = useState<PhaseType | null>();
+  const [activeTab, setActiveTab] = useState<string>("tous");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [phaseIngredient, setPhaseIngretient] = useState<IngredientType[]>([]);
+
+  useEffect(() => {
     if (session && session.accessToken) {
       getAllIngredient(session.accessToken);
       groupIngredientsByCategory(session.accessToken);
-    }
-  }, [session]);
-
-  const getPhase = useMemo(() => {
-    if (session && session.accessToken) {
       getAllPhase(session.accessToken);
     }
   }, [session]);
 
   useEffect(() => {
-    getIngredient;
-    getPhase;
-  });
+    if (phaseAll?.length > 0 && phaseData.length === 0) {
+      const initialPhaseData = phaseAll.map((el) => ({
+        id: el._id,
+        title: el.nom,
+        ingredients: [],
+        allowedCategories: el.allowedCategories,
+      }));
+      setPhaseData(initialPhaseData);
+    }
+  }, [phaseAll]);
 
   const [recipeName, setRecipeName] = useState<string>("");
   const [description, setDescription] = useState<string>(
@@ -69,110 +81,62 @@ const RecipeInterface = () => {
   const [hotRecipe, setHotRecipe] = useState<boolean>(false);
   const [coldRecipe, setColdRecipe] = useState<boolean>(false);
   const [searchIngredient, setSearchIngredient] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<string>("Phase A");
-  const [selectedCategory, setSelectedCategory] = useState<string>(
-    "Ingrédients de base"
-  );
 
-  // Categories for the left panel
-  const categories = [
-    "Ingrédients de base",
-    "Gommes et Gélifiant",
-    "HA d'acide millefeille",
-    "HA d'acide millefeille",
-    "HA d'acide millefeille",
-  ];
+  // const updateIngredient = (
+  //   phaseIndex: number,
+  //   ingredientId: number,
+  //   field: keyof Ingredient,
+  //   value: string
+  // ): void => {
+  //   setPhaseData((prev) =>
+  //     prev.map((phase, pIndex) =>
+  //       pIndex === phaseIndex
+  //         ? {
+  //             ...phase,
+  //             ingredients: phase.ingredients.map((ing) =>
+  //               ing.id === ingredientId ? { ...ing, [field]: value } : ing
+  //             ),
+  //           }
+  //         : phase
+  //     )
+  //   );
+  // };
 
-  // Sample ingredients data for Phase A
-  const phaseAIngredients = [
-    { name: "Gomme acacias", ml: "-", gouttes: "-" },
-    { name: "Gomme adragante", ml: "-", gouttes: "-" },
-    { name: "Gomme agar agar", ml: "-", gouttes: "-" },
-    { name: "Gomme carraghenane", ml: "-", gouttes: "-" },
-    { name: "Gomme xanthane", ml: "-", gouttes: "-" },
-    { name: "HA d'acide millefeille", ml: "-", gouttes: "-" },
-    { name: "HA d'acide millefeille", ml: "-", gouttes: "-" },
-    { name: "HA d'acide millefeille", ml: "-", gouttes: "-" },
-    { name: "HA d'acide millefeille", ml: "-", gouttes: "-" },
-    { name: "HA d'acide millefeille", ml: "-", gouttes: "-" },
-  ];
-
-  // Structure des phases avec lignes vides par défaut
-  const [phaseData, setPhaseData] = useState<PhaseData[]>([
-    {
-      phase: "A",
-      title: "Phase A - Phase Aqueuse",
-      ingredients: [{ id: 1, name: "", family: "", percentage: "", cost: "" }],
-    },
-    {
-      phase: "H",
-      title: "Phase H - Phase Huileuse",
-      ingredients: [{ id: 2, name: "", family: "", percentage: "", cost: "" }],
-    },
-    {
-      phase: "E",
-      title: "Phase E - Émulsifiants",
-      ingredients: [{ id: 3, name: "", family: "", percentage: "", cost: "" }],
-    },
-    {
-      phase: "D",
-      title: "Phase D - Additifs",
-      ingredients: [{ id: 4, name: "", family: "", percentage: "", cost: "" }],
-    },
-  ]);
-
-  const tabs: string[] = ["Phase A", "Phase H", "Phase E", "Phase D"];
-
-  const updateIngredient = (
-    phaseIndex: number,
-    ingredientId: number,
-    field: keyof Ingredient,
-    value: string
-  ): void => {
+  // Pour ajouter un ingrédient à une phase spécifique
+  const addIngredientToPhase = (
+    phaseId: string,
+    ingredient: IngredientType
+  ) => {
     setPhaseData((prev) =>
-      prev.map((phase, pIndex) =>
-        pIndex === phaseIndex
-          ? {
-              ...phase,
-              ingredients: phase.ingredients.map((ing) =>
-                ing.id === ingredientId ? { ...ing, [field]: value } : ing
-              ),
-            }
+      prev.map((phase) =>
+        phase.id === phaseId
+          ? { ...phase, ingredients: [...phase.ingredients, ingredient] }
           : phase
       )
     );
   };
 
-  const addIngredientToPhase = (phaseIndex: number): void => {
+  // Pour ajouter un ingrédient à une phase spécifique
+  const resertReceipePhase = () => {
     setPhaseData((prev) =>
-      prev.map((phase, pIndex) =>
-        pIndex === phaseIndex
-          ? {
-              ...phase,
-              ingredients: [
-                ...phase.ingredients,
-                {
-                  id: Date.now() + Math.random(),
-                  name: "",
-                  family: "",
-                  percentage: "",
-                  cost: "",
-                },
-              ],
-            }
-          : phase
-      )
+      prev.map((phase) => {
+        return { ...phase, ingredients: [] };
+      })
     );
   };
 
-  const removeIngredient = (phaseIndex: number, ingredientId: number): void => {
+  // Pour retirer un ingrédient à une phase spécifique
+  const removeIngredientFromPhase = (
+    phaseId: string,
+    ingredient: IngredientType
+  ) => {
     setPhaseData((prev) =>
-      prev.map((phase, pIndex) =>
-        pIndex === phaseIndex
+      prev.map((phase) =>
+        phase.id === phaseId
           ? {
               ...phase,
               ingredients: phase.ingredients.filter(
-                (ing) => ing.id !== ingredientId
+                (ing) => ing._id !== ingredient._id
               ),
             }
           : phase
@@ -180,29 +144,29 @@ const RecipeInterface = () => {
     );
   };
 
-  const getTotalPercentage = (): number => {
-    return phaseData.reduce(
-      (total, phase) =>
-        total +
-        phase.ingredients.reduce(
-          (phaseTotal, ing) => phaseTotal + (parseFloat(ing.percentage) || 0),
-          0
-        ),
-      0
-    );
-  };
+  // const getTotalPercentage = (): number => {
+  //   return phaseData.reduce(
+  //     (total, phase) =>
+  //       total +
+  //       phase.ingredients.reduce(
+  //         (phaseTotal, ing) => phaseTotal + (parseFloat(ing.percentage) || 0),
+  //         0
+  //       ),
+  //     0
+  //   );
+  // };
 
-  const getTotalCost = (): number => {
-    return phaseData.reduce(
-      (total, phase) =>
-        total +
-        phase.ingredients.reduce(
-          (phaseTotal, ing) => phaseTotal + (parseFloat(ing.cost) || 0),
-          0
-        ),
-      0
-    );
-  };
+  // const getTotalCost = (): number => {
+  //   return phaseData.reduce(
+  //     (total, phase) =>
+  //       total +
+  //       phase.ingredients.reduce(
+  //         (phaseTotal, ing) => phaseTotal + (parseFloat(ing.cost) || 0),
+  //         0
+  //       ),
+  //     0
+  //   );
+  // };
 
   const calculatedTotal: number = totalQuantity * (unit === "g" ? 1 : 1);
 
@@ -222,18 +186,40 @@ const RecipeInterface = () => {
 
         {/* Description */}
         <div className="mb-6 flex gap-4">
-          <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
-            <Plus className="w-8 h-8 text-white bg-gray-600 rounded-full p-1" />
+          <div className="w-24 h-24 bg-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              id="image-upload"
+              onChange={(e) => {
+                // Handle image upload here
+                const file = e.target.files?.[0];
+                if (file) {
+                  // Process the uploaded image
+                  console.log("Image uploaded:", file);
+                }
+              }}
+            />
+            <label
+              htmlFor="image-upload"
+              className="cursor-pointer flex flex-col items-center justify-center w-full h-full"
+            >
+              <Camera className="w-6 h-6 text-gray-500 mb-1" />
+              <span className="text-xs text-gray-500">Image</span>
+            </label>
           </div>
-          <div className="flex-1">
+
+          <div className="flex-1 h-24">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg h-24 resize-none"
+              className="w-full p-3 border border-gray-300 rounded-lg resize-none h-full"
               placeholder="Description de la recette..."
+              style={{ height: "calc(100% - 1.75rem)" }}
             />
           </div>
         </div>
@@ -267,13 +253,45 @@ const RecipeInterface = () => {
           <div className="flex items-center gap-2">
             <label className="font-medium">QSP 100% :</label>
             <select
-              value={qsp100}
-              onChange={(e) => setQsp100(e.target.value)}
+              // value={qsp100}
+              onChange={(e) => {
+                // setQsp100(e.target.value);
+                resertReceipePhase();
+                const data = JSON.parse(e.target.value);
+                const phase = phaseAll.find((el) => {
+                  return el.allowedCategories.find(
+                    (el) => el._id === data.item.category._id
+                  );
+                });
+                if (!phase) return;
+                addIngredientToPhase(phase?._id, data.ingredient);
+              }}
               className="p-2 border border-gray-300 rounded"
             >
-              <option value="Eau déminéralisée">Eau déminéralisée</option>
+              {ingredientsByCategory.map((item, index) => (
+                <optgroup
+                  key={index}
+                  label={
+                    phaseAll.find((el) => {
+                      return el.allowedCategories.find(
+                        (el) => el._id === item.category._id
+                      );
+                    })?.nom || "Phase"
+                  }
+                >
+                  {item.ingredients.map((ingredient, idx) => (
+                    <option
+                      key={ingredient._id + index + idx}
+                      value={JSON.stringify({ ingredient, item })}
+                    >
+                      {ingredient.nom}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+              {/* <option value="Eau déminéralisée">Eau déminéralisée</option>
               <option value="Eau florale">Eau florale</option>
-              <option value="Hydrolat">Hydrolat</option>
+              <option value="Hydrolat">Hydrolat</option> */}
             </select>
           </div>
 
@@ -335,17 +353,32 @@ const RecipeInterface = () => {
 
         {/* Phase Tabs */}
         <div className="mb-4 flex gap-2">
-          {tabs.map((tab) => (
+          <button
+            onClick={() => {
+              setActiveTab("tous");
+              setCurrentPhase(null);
+            }}
+            className={`px-4 py-2 rounded font-medium cursor-pointer ${
+              activeTab === "tous" && "bg-[#4B352A] text-white"
+            }`}
+          >
+            Préparation
+          </button>
+          {phaseAll.map((item, index) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+              key={index}
+              onClick={() => {
+                setActiveTab(item._id);
+                setCurrentPhase(item);
+                setPhaseIngretient([]);
+              }}
               className={`px-4 py-2 rounded font-medium cursor-pointer ${
-                activeTab === tab
+                activeTab === item._id
                   ? "bg-[#4B352A] text-white"
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              {tab}
+              {item.nom}
             </button>
           ))}
           <span className="text-orange-600 text-sm self-center ml-2 cursor-pointer">
@@ -353,127 +386,26 @@ const RecipeInterface = () => {
           </span>
         </div>
 
+        {!currentPhase && (
+          <RecetteTab
+            phaseData={phaseData}
+            removeIngredientFromPhase={removeIngredientFromPhase}
+          />
+        )}
+
         {/* Main Content Area with Categories and Ingredients Table */}
-        <div className="bg-gray-300 p-4 rounded-lg">
-          <div className="flex gap-4 h-96">
-            {/* Left Panel - Categories */}
-            <div className="w-64 bg-white rounded flex flex-col overflow-hidden">
-              {/* Categories Header */}
-              <div className="bg-[#4B352A] text-white p-3 text-center font-medium">
-                Famille / Catégories
-              </div>
-
-              {/* Categories List with scroll */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="divide-y divide-gray-200">
-                  {ingredientsByCategory &&
-                    ingredientsByCategory.map((item, index) => {
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => setSelectedCategory(item.category._id)}
-                          className={`w-full p-3 text-left text-sm hover:bg-blue-50 cursor-pointer ${
-                            selectedCategory === item.category._id
-                              ? "bg-blue-100 text-blue-800"
-                              : "text-gray-700"
-                          }`}
-                        >
-                          {item.category.nom}
-                        </button>
-                      );
-                    })}
-                </div>
-              </div>
-            </div>
-
-            {/* Right Panel - Ingredients Table */}
-            <div className="flex-1 bg-white rounded overflow-hidden flex flex-col">
-              {/* Container with fixed dimensions and scroll */}
-              <div className="min-w-[600px] flex-1 flex flex-col overflow-hidden">
-                {/* Table Header - Sticky */}
-                <div className="bg-[#4B352A] text-white">
-                  <div className="grid grid-cols-5 gap-0">
-                    <div className="p-3 text-center font-medium border-r border-gray-300 min-w-[180px]">
-                      Ingrédients
-                    </div>
-                    <div className="p-3 text-center font-medium border-r border-gray-300 min-w-[80px]">
-                      ml
-                    </div>
-                    <div className="p-3 text-center font-medium border-r border-gray-300 min-w-[100px]">
-                      Gouttes
-                    </div>
-                    <div className="p-3 text-center font-medium border-r border-gray-300 min-w-[80px]">
-                      Ajouter
-                    </div>
-                    <div className="p-3 text-center font-medium min-w-[80px]">
-                      Guide
-                    </div>
-                  </div>
-                </div>
-
-                {/* Phase Header */}
-                <div className="bg-blue-200">
-                  <div className="grid grid-cols-5 gap-0">
-                    <div className="p-3 font-medium text-blue-800 border-r border-b border-gray-300 min-w-[180px]">
-                      Phase A - Phase Aqueuse
-                    </div>
-                    <div className="border-r border-gray-300 border-b min-w-[80px]"></div>
-                    <div className="border-r border-gray-300 border-b min-w-[100px]"></div>
-                    <div className="border-r border-gray-300 border-b min-w-[80px]"></div>
-                    <div className="border-b border-gray-300 min-w-[80px]"></div>
-                  </div>
-                </div>
-
-                {/* Ingredients List with scroll */}
-                <div className="flex-1 overflow-y-auto">
-                  {phaseAIngredients.map((ingredient, index) => (
-                    <div key={index} className="bg-white hover:bg-gray-50">
-                      <div className="grid grid-cols-5 gap-0 border-b border-gray-200">
-                        <div className="p-2 border-r border-gray-300 text-sm min-w-[180px]">
-                          {ingredient.name}
-                        </div>
-                        <div className="p-2 border-r border-gray-300 text-center text-sm min-w-[80px]">
-                          {ingredient.ml}
-                        </div>
-                        <div className="p-2 border-r border-gray-300 text-center text-sm min-w-[100px]">
-                          {ingredient.gouttes}
-                        </div>
-                        <div className="p-2 border-r border-gray-300 flex justify-center min-w-[80px]">
-                          <CircleCheck className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-green-100 text-gray-600 font-bold text-sm cursor-pointer" />
-                          {/* <button className="w-6 h-6 border-2 border-gray-400 rounded-full flex items-center justify-center hover:bg-green-100 text-gray-600 font-bold text-sm cursor-pointer">
-                            +
-                          </button> */}
-                        </div>
-                        <div className="p-2 flex justify-center min-w-[80px]">
-                          <BookOpen className="h-6 w-6 p-0.5 bg-white border border-black rounded-md flex items-center justify-center hover:bg-gray-200 cursor-pointer" />
-                          {/* <button className="w-6 h-6 p-1 bg-white border border-black rounded-md flex items-center justify-center hover:bg-gray-200 cursor-pointer">
-                          </button> */}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Total Row - Sticky Bottom */}
-                <div className="bg-blue-200 border-t border-gray-300">
-                  <div className="grid grid-cols-5 gap-0">
-                    <div className="p-3 font-bold text-blue-800 border-r border-gray-300 min-w-[180px]">
-                      TOTAL
-                    </div>
-                    <div className="p-3 text-center font-bold text-blue-800 border-r border-gray-300 min-w-[80px]">
-                      100ml
-                    </div>
-                    <div className="p-3 text-center font-bold text-blue-800 border-r border-gray-300 min-w-[100px]">
-                      100
-                    </div>
-                    <div className="border-r border-gray-300 min-w-[80px]"></div>
-                    <div className="min-w-[80px]"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {currentPhase && (
+          <PhaseTab
+            phaseData={phaseData}
+            ingredientsByCategory={ingredientsByCategory}
+            phaseIngredient={phaseIngredient}
+            currentPhase={currentPhase}
+            selectedCategory={selectedCategory}
+            setPhaseIngretient={setPhaseIngretient}
+            setSelectedCategory={setSelectedCategory}
+            addIngredientToPhase={addIngredientToPhase}
+          />
+        )}
 
         {/* Warning */}
         <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded flex items-center gap-2">

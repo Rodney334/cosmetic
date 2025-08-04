@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Calculator,
   Save,
@@ -8,23 +8,37 @@ import {
   Trash2,
   Camera,
 } from "lucide-react";
-
-// Types définis pour corriger les erreurs TypeScript
-interface Ingredient {
-  id: number;
-  name: string;
-  family: string;
-  percentage: string;
-  cost: string;
-}
-
-interface PhaseData {
-  phase: string;
-  title: string;
-  ingredients: Ingredient[];
-}
+import { usePhaseStore } from "@/stores/phase.store";
+import { useSession } from "next-auth/react";
+import { IngredientType } from "@/types/ingredient.type";
+import { PhaseData } from "@/types/recipe.type";
 
 const RecipeInterface = () => {
+  const { data: session } = useSession();
+
+  const { phaseAll, getAllPhase } = usePhaseStore();
+
+  // Structure des phases avec lignes vides par défaut
+  const [phaseData, setPhaseData] = useState<PhaseData[]>([]);
+
+  useEffect(() => {
+    if (session && session.accessToken) {
+      getAllPhase(session.accessToken);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (phaseAll?.length > 0 && phaseData.length === 0) {
+      const initialPhaseData = phaseAll.map((el) => ({
+        id: el._id,
+        title: el.nom,
+        ingredients: [],
+        allowedCategories: el.allowedCategories,
+      }));
+      setPhaseData(initialPhaseData);
+    }
+  }, [phaseAll]);
+
   const [recipeName, setRecipeName] = useState<string>("");
   const [description, setDescription] = useState<string>(
     "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nNunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
@@ -37,36 +51,12 @@ const RecipeInterface = () => {
   const [searchIngredient, setSearchIngredient] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("Tous");
 
-  // Structure des phases avec lignes vides par défaut
-  const [phaseData, setPhaseData] = useState<PhaseData[]>([
-    {
-      phase: "A",
-      title: "Phase A - Phase Aqueuse",
-      ingredients: [{ id: 1, name: "", family: "", percentage: "", cost: "" }],
-    },
-    {
-      phase: "H",
-      title: "Phase H - Phase Huileuse",
-      ingredients: [{ id: 2, name: "", family: "", percentage: "", cost: "" }],
-    },
-    {
-      phase: "E",
-      title: "Phase E - Émulsifiants",
-      ingredients: [{ id: 3, name: "", family: "", percentage: "", cost: "" }],
-    },
-    {
-      phase: "D",
-      title: "Phase D - Additifs",
-      ingredients: [{ id: 4, name: "", family: "", percentage: "", cost: "" }],
-    },
-  ]);
-
   const tabs: string[] = ["Tous", "Phase A", "Phase H", "Phase E", "Phase D"];
 
   const updateIngredient = (
     phaseIndex: number,
-    ingredientId: number,
-    field: keyof Ingredient,
+    ingredientId: string,
+    field: keyof IngredientType,
     value: string
   ): void => {
     setPhaseData((prev) =>
@@ -75,7 +65,7 @@ const RecipeInterface = () => {
           ? {
               ...phase,
               ingredients: phase.ingredients.map((ing) =>
-                ing.id === ingredientId ? { ...ing, [field]: value } : ing
+                ing._id === ingredientId ? { ...ing, [field]: value } : ing
               ),
             }
           : phase
@@ -83,36 +73,36 @@ const RecipeInterface = () => {
     );
   };
 
-  const addIngredientToPhase = (phaseIndex: number): void => {
-    setPhaseData((prev) =>
-      prev.map((phase, pIndex) =>
-        pIndex === phaseIndex
-          ? {
-              ...phase,
-              ingredients: [
-                ...phase.ingredients,
-                {
-                  id: Date.now() + Math.random(),
-                  name: "",
-                  family: "",
-                  percentage: "",
-                  cost: "",
-                },
-              ],
-            }
-          : phase
-      )
-    );
-  };
+  // const addIngredientToPhase = (phaseIndex: number): void => {
+  //   setPhaseData((prev) =>
+  //     prev.map((phase, pIndex) =>
+  //       pIndex === phaseIndex
+  //         ? {
+  //             ...phase,
+  //             ingredients: [
+  //               ...phase.ingredients,
+  //               {
+  //                 id: Date.now() + Math.random(),
+  //                 name: "",
+  //                 family: "",
+  //                 percentage: "",
+  //                 cost: "",
+  //               },
+  //             ],
+  //           }
+  //         : phase
+  //     )
+  //   );
+  // };
 
-  const removeIngredient = (phaseIndex: number, ingredientId: number): void => {
+  const removeIngredient = (phaseIndex: number, ingredientId: string): void => {
     setPhaseData((prev) =>
       prev.map((phase, pIndex) =>
         pIndex === phaseIndex
           ? {
               ...phase,
               ingredients: phase.ingredients.filter(
-                (ing) => ing.id !== ingredientId
+                (ing) => ing._id !== ingredientId
               ),
             }
           : phase
@@ -125,7 +115,7 @@ const RecipeInterface = () => {
       (total, phase) =>
         total +
         phase.ingredients.reduce(
-          (phaseTotal, ing) => phaseTotal + (parseFloat(ing.percentage) || 0),
+          (phaseTotal, ing) => phaseTotal + (parseFloat("100.05") || 0),
           0
         ),
       0
@@ -137,7 +127,7 @@ const RecipeInterface = () => {
       (total, phase) =>
         total +
         phase.ingredients.reduce(
-          (phaseTotal, ing) => phaseTotal + (parseFloat(ing.cost) || 0),
+          (phaseTotal, ing) => phaseTotal + (parseFloat("100.25") || 0),
           0
         ),
       0
@@ -349,13 +339,13 @@ const RecipeInterface = () => {
               </div>
 
               {/* Phases and Ingredients */}
-              {phaseData.map((phase, phaseIndex) => (
-                <div key={phase.phase}>
+              {phaseData.map((item, index) => (
+                <div key={item.id + index}>
                   {/* Phase Header Row */}
                   <div className="bg-blue-200">
                     <div className="grid grid-cols-6 gap-0">
                       <div className="p-3 font-medium text-blue-800 border-r border-gray-300 border-b min-w-[150px]">
-                        {phase.title}
+                        {item.title}
                       </div>
                       <div className="border-r border-gray-300 border-b min-w-[100px]"></div>
                       <div className="border-r border-gray-300 border-b min-w-[120px]"></div>
@@ -366,20 +356,23 @@ const RecipeInterface = () => {
                   </div>
 
                   {/* Phase Ingredients */}
-                  {phase.ingredients.map((ingredient) => (
-                    <div key={ingredient.id} className="bg-white">
+                  {item.ingredients.map((ingredient) => (
+                    <div key={ingredient._id} className="bg-white">
                       <div className="grid grid-cols-6 gap-0 hover:bg-gray-50">
                         <div className="p-2 border-r border-gray-300 border-b min-w-[150px]">
                           <input
                             type="text"
-                            value={ingredient.name}
-                            onChange={(e) =>
-                              updateIngredient(
-                                phaseIndex,
-                                ingredient.id,
-                                "name",
-                                e.target.value
-                              )
+                            value={ingredient.nom}
+                            onChange={
+                              (e) => {
+                                console.log("bla");
+                              }
+                              // updateIngredient(
+                              //   phaseIndex,
+                              //   ingredient.id,
+                              //   "name",
+                              //   e.target.value
+                              // )
                             }
                             className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
                             placeholder="-"
@@ -387,20 +380,23 @@ const RecipeInterface = () => {
                         </div>
                         <div className="p-2 border-r border-gray-300 border-b flex justify-center items-center min-w-[100px]">
                           <span className="inline-block bg-green-100 px-2 py-1 rounded text-xs font-medium text-green-800 min-w-6 text-center">
-                            {phase.phase}
+                            {item.title}
                           </span>
                         </div>
                         <div className="p-2 border-r border-b border-gray-300 min-w-[120px]">
                           <input
                             type="text"
-                            value={ingredient.family}
-                            onChange={(e) =>
-                              updateIngredient(
-                                phaseIndex,
-                                ingredient.id,
-                                "family",
-                                e.target.value
-                              )
+                            value={ingredient.categorie.nom}
+                            onChange={
+                              (e) => {
+                                console.log("blabla");
+                              }
+                              // updateIngredient(
+                              //   phaseIndex,
+                              //   ingredient.id,
+                              //   "family",
+                              //   e.target.value
+                              // )
                             }
                             className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center"
                             placeholder="-"
@@ -410,14 +406,17 @@ const RecipeInterface = () => {
                           <input
                             type="number"
                             step="0.1"
-                            value={ingredient.percentage}
-                            onChange={(e) =>
-                              updateIngredient(
-                                phaseIndex,
-                                ingredient.id,
-                                "percentage",
-                                e.target.value
-                              )
+                            // value={ingredient.percentage}
+                            onChange={
+                              (e) => {
+                                console.log("blablabla");
+                              }
+                              // updateIngredient(
+                              //   phaseIndex,
+                              //   ingredient.id,
+                              //   "percentage",
+                              //   e.target.value
+                              // )
                             }
                             className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center"
                             placeholder="-"
@@ -427,14 +426,17 @@ const RecipeInterface = () => {
                           <input
                             type="number"
                             step="0.01"
-                            value={ingredient.cost}
-                            onChange={(e) =>
-                              updateIngredient(
-                                phaseIndex,
-                                ingredient.id,
-                                "cost",
-                                e.target.value
-                              )
+                            // value={ingredient.cost}
+                            onChange={
+                              (e) => {
+                                console.log("cout");
+                              }
+                              // updateIngredient(
+                              //   phaseIndex,
+                              //   ingredient.id,
+                              //   "cost",
+                              //   e.target.value
+                              // )
                             }
                             className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center"
                             placeholder="-"
@@ -442,8 +444,11 @@ const RecipeInterface = () => {
                         </div>
                         <div className="p-2 border-b border-gray-300 flex justify-center items-center min-w-[100px]">
                           <button
-                            onClick={() =>
-                              removeIngredient(phaseIndex, ingredient.id)
+                            onClick={
+                              () => {
+                                console.log("remove");
+                              }
+                              // removeIngredient(phaseIndex, ingredient.id)
                             }
                             className="p-1 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded cursor-pointer"
                           >

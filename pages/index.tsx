@@ -1,4 +1,5 @@
 import { useIngredientStore } from "@/stores/ingredient.store";
+import { useUserStore } from "@/stores/user.store";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useMemo } from "react";
@@ -6,17 +7,16 @@ import { useEffect, useMemo } from "react";
 const HomePage = () => {
   const { data: session } = useSession();
   const { getAllIngredient, groupIngredientsByCategory } = useIngredientStore();
+  const { getAllUser, getUserById } = useUserStore();
 
-  const getIngredient = useMemo(() => {
+  useEffect(() => {
     if (session && session.accessToken) {
       getAllIngredient(session.accessToken);
       groupIngredientsByCategory(session.accessToken);
+      getUserById(session.accessToken, session.user.id);
+      getAllUser(session.accessToken);
     }
   }, [session]);
-
-  useEffect(() => {
-    getIngredient;
-  });
   return (
     <div className="min-h-screen bg-[#4B352A] opacity-80 p-6 py-24">
       <div className="max-w-6xl mx-auto pt-20 space-y-10 bg-white rounded-lg w-full px-6 md:px-12 py-10">

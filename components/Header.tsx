@@ -25,19 +25,21 @@ const Header = () => {
 
   // Classes pour les liens actifs et inactifs
   const getLinkClasses = (href: string, isMobile: boolean = false) => {
-    const baseClasses = isMobile 
-      ? "block px-3 py-2 rounded-md transition-colors" 
+    const baseClasses = isMobile
+      ? "block px-3 py-2 rounded-md transition-colors"
       : "transition-colors";
-    
+
     const activeClasses = isMobile
       ? "text-[#4B352A] bg-[#4B352A]font-medium"
-      : "text-[#4B352A] font-bold border-b-2 border-[#4B352A] pb-1";
-    
+      : "text-[#4B352A] font-bold pb-1";
+
     const inactiveClasses = isMobile
       ? "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
       : "text-gray-600 hover:text-gray-900";
 
-    return `${baseClasses} ${isActiveLink(href) ? activeClasses : inactiveClasses}`;
+    return `${baseClasses} ${
+      isActiveLink(href) ? activeClasses : inactiveClasses
+    }`;
   };
 
   return (
@@ -62,8 +64,8 @@ const Header = () => {
                 Ingrédients
               </Link>
               <Link
-                href="/public/newRecette"
-                className={getLinkClasses("/public/newRecette")}
+                href="/public/recette-create"
+                className={getLinkClasses("/public/recette-create")}
               >
                 Nouvelle Recette
               </Link>
@@ -133,9 +135,9 @@ const Header = () => {
                 Ingrédients
               </Link>
               <Link
-                href="/public/newRecette"
+                href="/public/recette-create"
                 onClick={closeMenu}
-                className={getLinkClasses("/public/newRecette", true)}
+                className={getLinkClasses("/public/recette-create", true)}
               >
                 Nouvelle Recette
               </Link>

@@ -4,12 +4,12 @@ import { PhaseType } from "@/types/phase.type";
 import axios, { AxiosResponse } from "axios";
 import { create } from "zustand";
 
-interface IngredientStoreInterface {
+interface PhaseStoreInterface {
   phaseAll: PhaseType[];
   getAllPhase: (token: string) => Promise<void>;
 }
 
-export const usePhaseStore = create<IngredientStoreInterface>((set, get) => ({
+export const usePhaseStore = create<PhaseStoreInterface>((set, get) => ({
   phaseAll: [],
 
   getAllPhase: async (token: string) => {
