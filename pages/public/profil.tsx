@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { ChevronDown, Mail, Plus } from "lucide-react";
+import { ChevronDown, Mail, Plus, PowerCircle, PowerOff } from "lucide-react";
 import Image from "next/image";
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/router";
 
 const Profil = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     nom: "",
     pseudo: "",
@@ -74,6 +77,13 @@ const Profil = () => {
             <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors cursor-pointer">
               Edit
             </button>
+            <PowerCircle
+              className={`w-10 h-10 p-1 bg-red-300 rounded hover:bg-red-500 text-gray-200 hover:text-white`}
+              onClick={() => {
+                signOut({ callbackUrl: "/public/login" });
+                // router.push("/public/login");
+              }}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

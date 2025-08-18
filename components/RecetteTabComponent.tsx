@@ -1,18 +1,27 @@
 import { IngredientType } from "@/types/ingredient.type";
+import { PhaseType } from "@/types/phase.type";
 import { PhaseData } from "@/types/recipe.type";
 import { Trash2 } from "lucide-react";
 
 type RecetteTabType = {
+  QSPphase: PhaseType | undefined;
   phaseData: PhaseData[];
   removeIngredientFromPhase: (
     phaseId: string,
     ingredient: IngredientType
   ) => void;
+  updateIngredientQuantity: (
+    phaseId: string,
+    ingredientId: string,
+    newQuantity: number
+  ) => void;
 };
 
 export const RecetteTab = ({
+  QSPphase,
   phaseData,
   removeIngredientFromPhase,
+  updateIngredientQuantity,
 }: RecetteTabType) => {
   return (
     <>
@@ -52,7 +61,7 @@ export const RecetteTab = ({
                 <div className="bg-blue-200">
                   <div className="grid grid-cols-6 gap-0">
                     <div className="p-3 font-medium text-blue-800 border-r border-gray-300 border-b min-w-[150px]">
-                      {item.title}
+                      {item.id === "0" ? "QSP" : item.title}
                     </div>
                     <div className="border-r border-gray-300 border-b min-w-[100px]"></div>
                     <div className="border-r border-gray-300 border-b min-w-[120px]"></div>
@@ -70,83 +79,56 @@ export const RecetteTab = ({
                         <input
                           type="text"
                           value={ingredient.nom}
-                          onChange={
-                            (e) => {
-                              console.log("bla");
-                            }
-                            // updateIngredient(
-                            //   phaseIndex,
-                            //   ingredient.id,
-                            //   "name",
-                            //   e.target.value
-                            // )
-                          }
                           className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
                           placeholder="-"
+                          disabled={true}
                         />
                       </div>
                       <div className="p-2 border-r border-gray-300 border-b flex justify-center items-center min-w-[100px]">
                         <span className="inline-block bg-green-100 px-2 py-1 rounded text-xs font-medium text-green-800 min-w-6 text-center">
-                          {item.title}
+                          {item.id === "0" ? QSPphase?.nom : item.title}
                         </span>
                       </div>
                       <div className="p-2 border-r border-b border-gray-300 min-w-[120px]">
                         <input
                           type="text"
+                          disabled={true}
                           value={ingredient.categorie.nom}
-                          onChange={
-                            (e) => {
-                              console.log("blabla");
-                            }
-                            // updateIngredient(
-                            //   phaseIndex,
-                            //   ingredient.id,
-                            //   "family",
-                            //   e.target.value
-                            // )
-                          }
                           className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center"
-                          placeholder="-"
+                          placeholder="famille"
                         />
                       </div>
                       <div className="p-2 border-r border-gray-300 border-b min-w-[80px]">
                         <input
                           type="number"
-                          step="0.1"
-                          // value={ingredient.percentage}
-                          onChange={
-                            (e) => {
-                              console.log("blablabla");
+                          step="0.01"
+                          value={ingredient.quantite || 0}
+                          onChange={(e) => {
+                            let value: number;
+                            if (!parseFloat(e.target.value)) {
+                              value = 0;
+                            } else {
+                              value = parseFloat(e.target.value);
                             }
-                            // updateIngredient(
-                            //   phaseIndex,
-                            //   ingredient.id,
-                            //   "percentage",
-                            //   e.target.value
-                            // )
-                          }
+                            updateIngredientQuantity(
+                              item.id,
+                              ingredient._id,
+                              value
+                            );
+                          }}
                           className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center"
                           placeholder="-"
+                          disabled={item.id === "0"}
+                          min={0}
+                          max={100}
                         />
                       </div>
                       <div className="p-2 border-r border-b border-gray-300 min-w-[100px]">
                         <input
                           type="number"
                           step="0.01"
-                          // value={ingredient.cost}
-                          onChange={
-                            (e) => {
-                              console.log("cout");
-                            }
-                            // updateIngredient(
-                            //   phaseIndex,
-                            //   ingredient.id,
-                            //   "cost",
-                            //   e.target.value
-                            // )
-                          }
+                          value={0}
                           className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center"
-                          placeholder="-"
                         />
                       </div>
                       <div className="p-2 border-b border-gray-300 flex justify-center items-center min-w-[100px]">

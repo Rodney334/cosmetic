@@ -13,7 +13,10 @@ interface IngredientStoreInterface {
   ingredientsByPhase: IngredientByCategorieType[];
   getAllIngredient: (token: string) => Promise<void>;
   groupIngredientsByCategory: (token: string) => Promise<void>;
-  groupIngredientsByPhase: (token: string, phaseId: string) => Promise<void>;
+  groupIngredientsByPhase: (
+    token: string,
+    phaseId: string
+  ) => Promise<IngredientType[]>;
 }
 
 export const useIngredientStore = create<IngredientStoreInterface>(
@@ -61,24 +64,24 @@ export const useIngredientStore = create<IngredientStoreInterface>(
 
     groupIngredientsByPhase: async (token: string, phaseId: string) => {
       try {
-        const response: AxiosResponse<IngredientByCategorieType[]> =
-          await axios.get(
-            `${api.base_url}/phase/${phaseId}/allowed-ingredients`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+        const response: AxiosResponse<IngredientType[]> = await axios.get(
+          `${api.base_url}/phase/${phaseId}/allowed-ingredients`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         // console.log(response.data);
         const sortedData = response.data.sort((a, b) =>
-          a.category.nom.localeCompare(b.category.nom, "fr", {
+          a.categorie.nom.localeCompare(b.categorie.nom, "fr", {
             sensitivity: "base",
           })
         );
-        set({ ingredientsByCategory: sortedData });
+        return sortedData;
       } catch (error) {
         CustomErrorToast("Catégorie par phase erreur système");
+        return [];
       }
     },
   })

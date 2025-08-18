@@ -1,10 +1,11 @@
 import { CategorieIngredientType, IngredientType } from "./ingredient.type";
+import { UserType } from "./user.type";
 
 export type RecipeType = {
   _id: string;
   nom: string;
   description: string;
-  auteurId: string;
+  auteurId: UserType;
   poidsTotal: number;
   devise: string;
   dateCreation: string;

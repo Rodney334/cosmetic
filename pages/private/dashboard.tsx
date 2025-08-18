@@ -8,7 +8,6 @@ import SystemSection from "@/components/SystemSection";
 const Dashboard: NextPageWithLayout = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  console.log("sessioin:", session);
 
   if (status === "loading") return <div>Chargement...</div>;
   const data = [
@@ -48,8 +47,8 @@ Dashboard.isDashboard = true;
 
 export default Dashboard;
 
-export const getServerSideProps = async (ctx: any) => {
-  const session = await getSession(ctx);
-  if (!session) return { redirect: { destination: "/public/login" } };
-  return { props: {} };
-};
+// export const getServerSideProps = async (ctx: any) => {
+//   const session = await getSession(ctx);
+//   if (!session) return { redirect: { destination: "/public/login" } };
+//   return { props: {} };
+// };

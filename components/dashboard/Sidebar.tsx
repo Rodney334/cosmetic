@@ -71,7 +71,7 @@ export default function DashboardSidebar() {
               title="Déconnexion"
               href="/private"
               icon={<LogOut className="h-5 w-5" />}
-              logOut={() => signOut()}
+              logOut={() => signOut({ callbackUrl: "/public/login" })}
             />
           </ul>
         </div>

@@ -23,6 +23,7 @@ export const authOptions: NextAuthOptions = {
             // Return object must match NextAuth's User type
             return {
               id: response.data.user._id, // Required field
+              role: response.data.user.role, // Required field
               email: response.data.user.email,
               name: response.data.user.name || "",
               accessToken: response.data.accessToken,
@@ -47,6 +48,7 @@ export const authOptions: NextAuthOptions = {
       // Lors de la connexion initiale, l'objet 'user' est disponible
       if (user) {
         token.id = user.id; // Persiste l'ID utilisateur dans le jeton
+        token.role = user.role;
         token.accessToken = user.accessToken; //
         token.refreshToken = user.refreshToken; //
       }
@@ -57,6 +59,7 @@ export const authOptions: NextAuthOptions = {
       // Ajoute les données du token à l'objet de session
       if (token && session.user) {
         session.user.id = token.id as string; // Ajoute l'ID à l'objet user de la session
+        session.user.role = token.role as string; // Ajoute l'ID à l'objet user de la session
         session.accessToken = token.accessToken; //
         session.refreshToken = token.refreshToken; //
       }

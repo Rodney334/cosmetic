@@ -10,6 +10,7 @@ export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
 declare module "next-auth" {
   interface User extends DefaultUser {
     id: string;
+    role: string;
     accessToken?: string;
     refreshToken?: string;
   }
@@ -24,6 +25,7 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
+    role: string;
     accessToken?: string;
     refreshToken?: string;
   }

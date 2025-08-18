@@ -1,20 +1,23 @@
+import { useCategoryStore } from "@/stores/categorie.store";
 import { useIngredientStore } from "@/stores/ingredient.store";
 import { useUserStore } from "@/stores/user.store";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 const HomePage = () => {
   const { data: session } = useSession();
   const { getAllIngredient, groupIngredientsByCategory } = useIngredientStore();
   const { getAllUser, getUserById } = useUserStore();
-
+  const { getAllCategory } = useCategoryStore();
+  // console.log({ session, env: process.env.NEXTAUTH_SECRET });
   useEffect(() => {
     if (session && session.accessToken) {
       getAllIngredient(session.accessToken);
       groupIngredientsByCategory(session.accessToken);
       getUserById(session.accessToken, session.user.id);
       getAllUser(session.accessToken);
+      getAllCategory(session.accessToken);
     }
   }, [session]);
   return (

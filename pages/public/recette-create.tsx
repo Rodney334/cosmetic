@@ -22,6 +22,10 @@ import {
   IngredientType,
 } from "@/types/ingredient.type";
 import { PhaseTab } from "@/components/PhaseTabComponent";
+import { CustomErrorToast, CustomSuccessToast } from "@/components/CustomToast";
+import axios from "axios";
+import { api } from "@/constantes/api.constante";
+import { Toaster } from "react-hot-toast";
 
 // Types définis pour corriger les erreurs TypeScript
 interface Ingredient {
@@ -46,6 +50,7 @@ const RecipeInterface = () => {
 
   // Structure des phases avec lignes vides par défaut
   const [phaseData, setPhaseData] = useState<PhaseData[]>([]);
+  const [QSPphase, setQSPphase] = useState<PhaseType>();
   const [currentPhase, setCurrentPhase] = useState<PhaseType | null>();
   const [activeTab, setActiveTab] = useState<string>("tous");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -61,20 +66,28 @@ const RecipeInterface = () => {
 
   useEffect(() => {
     if (phaseAll?.length > 0 && phaseData.length === 0) {
-      const initialPhaseData = phaseAll.map((el) => ({
-        id: el._id,
-        title: el.nom,
-        ingredients: [],
-        allowedCategories: el.allowedCategories,
-      }));
+      const initialPhaseData = [
+        // Phase QSP toujours en première position
+        {
+          id: "0",
+          title: "QSP",
+          ingredients: [],
+          allowedCategories: [],
+        },
+        // Puis les phases de l'API
+        ...phaseAll.map((el) => ({
+          id: el._id,
+          title: el.nom,
+          ingredients: [],
+          allowedCategories: el.allowedCategories,
+        })),
+      ];
       setPhaseData(initialPhaseData);
     }
   }, [phaseAll]);
 
   const [recipeName, setRecipeName] = useState<string>("");
-  const [description, setDescription] = useState<string>(
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nNunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
-  );
+  const [description, setDescription] = useState<string>("Une description");
   const [totalQuantity, setTotalQuantity] = useState<number>(100);
   const [unit, setUnit] = useState<string>("g");
   const [qsp100, setQsp100] = useState<string>("Eau déminéralisée");
@@ -108,11 +121,18 @@ const RecipeInterface = () => {
     ingredient: IngredientType
   ) => {
     setPhaseData((prev) =>
-      prev.map((phase) =>
-        phase.id === phaseId
-          ? { ...phase, ingredients: [...phase.ingredients, ingredient] }
-          : phase
-      )
+      prev.map((phase) => {
+        if (phase.id !== phaseId) return phase;
+
+        // Pour la phase QSP, on force la quantité à 100
+        const newIngredient =
+          phaseId === "0" ? { ...ingredient, quantite: 100 } : ingredient;
+
+        return {
+          ...phase,
+          ingredients: [...phase.ingredients, newIngredient],
+        };
+      })
     );
   };
 
@@ -144,6 +164,103 @@ const RecipeInterface = () => {
     );
   };
 
+  const updateIngredientQuantity = (
+    phaseId: string,
+    ingredientId: string,
+    newQuantity: number
+  ) => {
+    setPhaseData((prevPhases) => {
+      // Fonction helper pour limiter à 2 décimales
+      const toTwoDecimals = (num: number) => parseFloat(num.toFixed(2));
+
+      // 1. Validation initiale
+      if (phaseId === "0") return prevPhases;
+
+      const qspPhase = prevPhases.find((phase) => phase.id === "0");
+      if (!qspPhase?.ingredients.length) return prevPhases;
+      const [qspIngredient] = qspPhase.ingredients;
+
+      // 2. Trouver l'ingrédient cible
+      const targetPhase = prevPhases.find((phase) => phase.id === phaseId);
+      const targetIngredient = targetPhase?.ingredients.find(
+        (ing) => ing._id === ingredientId
+      );
+      if (!targetIngredient) return prevPhases;
+
+      // Formatage de l'ancienne quantité
+      const oldQuantity = toTwoDecimals(targetIngredient.quantite || 0);
+
+      // 3. Cas spécial : remise à zéro (backspace)
+      const isResetToZero = newQuantity === 0 && oldQuantity > 0;
+
+      // 4. Calcul des nouvelles valeurs (avec formatage)
+      let newQspQuantity = toTwoDecimals(qspIngredient.quantite);
+      let finalQuantity = toTwoDecimals(
+        Math.max(0, Math.min(newQuantity, 100))
+      );
+
+      if (isResetToZero) {
+        // Cas spécial : on remet toute la quantité dans QSP
+        newQspQuantity = toTwoDecimals(
+          Math.min(100, qspIngredient.quantite + oldQuantity)
+        );
+        finalQuantity = 0;
+      } else {
+        // Cas normal
+        const quantityDiff = toTwoDecimals(finalQuantity - oldQuantity);
+        newQspQuantity = toTwoDecimals(qspIngredient.quantite - quantityDiff);
+      }
+
+      // 5. Validation des limites
+      if (newQspQuantity < 0 || newQspQuantity > 100) {
+        return prevPhases;
+      }
+
+      // 6. Mise à jour
+      return prevPhases.map((phase) => {
+        if (phase.id === phaseId) {
+          const updatedIngredients = phase.ingredients.map((ingredient) => {
+            return ingredient._id === ingredientId
+              ? { ...ingredient, quantite: finalQuantity }
+              : ingredient;
+          });
+
+          return { ...phase, ingredients: updatedIngredients };
+        }
+
+        if (phase.id === "0") {
+          return {
+            ...phase,
+            ingredients: [{ ...qspIngredient, quantite: newQspQuantity }],
+          };
+        }
+
+        return phase;
+      });
+    });
+  };
+
+  const createRecipe = async () => {
+    try {
+      const data = {
+        nom: recipeName,
+        description: description,
+        poidsTotal: totalQuantity,
+      };
+      console.log(data);
+      const response = await axios.post(`${api.base_url}/recipe`, data, {
+        headers: {
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+      });
+      console.log(response.data);
+      localStorage.setItem("currentRecette", JSON.stringify(response.data));
+      CustomSuccessToast("Enregistré");
+    } catch (error) {
+      CustomErrorToast("La création de la récette a échoué.");
+    }
+  };
+
   // const getTotalPercentage = (): number => {
   //   return phaseData.reduce(
   //     (total, phase) =>
@@ -172,6 +289,7 @@ const RecipeInterface = () => {
 
   return (
     <div className="min-h-screen bg-[#4B352A] opacity-80 p-6 py-24">
+      <Toaster />
       <div className="max-w-7xl mx-auto p-6 bg-white rounded-lg">
         {/* Header */}
         <div className="mb-6">
@@ -215,6 +333,7 @@ const RecipeInterface = () => {
               Description
             </label>
             <textarea
+              defaultValue={description}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg resize-none h-full"
@@ -244,7 +363,10 @@ const RecipeInterface = () => {
             </select>
             <span className="text-gray-600">(= {calculatedTotal} ml)</span>
           </div>
-          <button className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#3e2b22] cursor-pointer">
+          <button
+            className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#3e2b22] cursor-pointer"
+            onClick={() => createRecipe()}
+          >
             Valider
           </button>
         </div>
@@ -264,7 +386,8 @@ const RecipeInterface = () => {
                   );
                 });
                 if (!phase) return;
-                addIngredientToPhase(phase?._id, data.ingredient);
+                setQSPphase(phase);
+                addIngredientToPhase("0", data.ingredient);
               }}
               className="p-2 border border-gray-300 rounded"
             >
@@ -345,7 +468,12 @@ const RecipeInterface = () => {
               className="w-full p-3 border border-gray-300 rounded-lg"
             />
           </div>
-          <button className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer">
+          <button
+            className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
+            onClick={() => {
+              console.log({ phaseData });
+            }}
+          >
             <Calculator className="w-4 h-4" />
             Calculer
           </button>
@@ -388,8 +516,10 @@ const RecipeInterface = () => {
 
         {!currentPhase && (
           <RecetteTab
+            QSPphase={QSPphase}
             phaseData={phaseData}
             removeIngredientFromPhase={removeIngredientFromPhase}
+            updateIngredientQuantity={updateIngredientQuantity}
           />
         )}
 
