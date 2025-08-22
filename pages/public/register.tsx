@@ -130,7 +130,6 @@ const Register = () => {
           />
         </div>
       </div>
-      ù
       <div className="w-full md:w-1/2 flex items-center justify-center px-4 mt-8 md:px-8 py-12">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl">
