@@ -32,11 +32,9 @@ import { Toaster } from "react-hot-toast";
 const NewRecipe = () => {
   const { data: session } = useSession();
   const {
-    ingredientAll,
     ingredientsByCategory,
     getAllIngredient,
     groupIngredientsByCategory,
-    groupIngredientsByPhase,
   } = useIngredientStore();
 
   const { phaseAll, getAllPhase } = usePhaseStore();
@@ -426,7 +424,7 @@ const NewRecipe = () => {
             placeholder="Nom de la Recette"
             value={recipeName}
             onChange={(e) => setRecipeName(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg text-lg font-medium"
+            className="w-full p-3 border border-gray-300 rounded-lg text-lg text-gray-700 font-medium"
           />
         </div>
 
@@ -449,7 +447,7 @@ const NewRecipe = () => {
             />
             <label
               htmlFor="image-upload"
-              className="cursor-pointer flex flex-col items-center justify-center w-full h-full"
+              className="text-gray-700 cursor-pointer flex flex-col items-center justify-center w-full h-full"
             >
               <Camera className="w-6 h-6 text-gray-500 mb-1" />
               <span className="text-xs text-gray-500">Image</span>
@@ -464,7 +462,7 @@ const NewRecipe = () => {
               defaultValue={description}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg resize-none h-full"
+              className="text-gray-700 w-full p-3 border border-gray-300 rounded-lg resize-none h-full"
               placeholder="Description de la recette..."
               style={{ height: "calc(100% - 1.75rem)" }}
             />
@@ -473,7 +471,7 @@ const NewRecipe = () => {
 
         {/* Quantity and Settings */}
         <div className="mb-6 flex items-center gap-6">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-gray-700">
             <label className="font-medium">Quantité Totale :</label>
             <input
               type="number"
@@ -486,10 +484,14 @@ const NewRecipe = () => {
               onChange={(e) => setUnit(e.target.value)}
               className="p-2 border border-gray-300 rounded"
             >
-              <option value="g">g</option>
-              <option value="ml">ml</option>
+              <option value="g" className="text-gray-700">
+                g
+              </option>
+              <option value="ml" className="text-gray-700">
+                ml
+              </option>
             </select>
-            <span className="text-gray-600">(= {calculatedTotal} ml)</span>
+            <span className="text-gray-700">(= {calculatedTotal} ml)</span>
           </div>
           <button
             className={`${
@@ -503,7 +505,7 @@ const NewRecipe = () => {
         </div>
 
         <div className="mb-6 flex items-center gap-6">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-gray-700">
             <label className="font-medium">QSP 100% :</label>
             <select
               // value={qsp100}
@@ -520,7 +522,7 @@ const NewRecipe = () => {
                 setQSPphase(phase);
                 addIngredientToPhase("0", data.ingredient);
               }}
-              className="p-2 border border-gray-300 rounded"
+              className="text-gray-700 p-2 border border-gray-300 rounded"
             >
               {ingredientsByCategory.map((item, index) => (
                 <optgroup
@@ -537,6 +539,7 @@ const NewRecipe = () => {
                     <option
                       key={ingredient._id + index + idx}
                       value={JSON.stringify({ ingredient, item })}
+                      className="text-gray-700"
                     >
                       {ingredient.nom}
                     </option>
@@ -549,7 +552,7 @@ const NewRecipe = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 text-gray-700">
             <label className="font-medium">Recette à chaud :</label>
 
             <div className="flex items-center gap-1">
@@ -596,7 +599,7 @@ const NewRecipe = () => {
               placeholder="Recherche ingrédients"
               value={searchIngredient}
               onChange={(e) => setSearchIngredient(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
+              className="text-gray-700 w-full p-3 border border-gray-300 rounded-lg"
             />
           </div>
           <button
@@ -639,8 +642,9 @@ const NewRecipe = () => {
                 setActiveTab("tous");
                 setCurrentPhase(null);
               }}
-              className={`px-4 py-2 rounded font-medium cursor-pointer ${
-                activeTab === "tous" && "bg-[#4B352A] text-white"
+              className={`px-4 py-2 rounded font-medium text-gray-700 hover:bg-gray-300 cursor-pointer ${
+                activeTab === "tous" &&
+                "bg-[#4B352A] text-white hover:text-gray-700"
               }`}
             >
               Préparation
@@ -700,7 +704,7 @@ const NewRecipe = () => {
         </div> */}
 
         {/* Résultat finale de la préparation */}
-        <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
+        <div className="text-gray-700 mt-4 p-4 bg-white border border-gray-200 rounded-lg">
           {recipeResult && !switcher && (
             <div className="space-y-6">
               {/* En-tête de la recette */}
@@ -830,7 +834,7 @@ const NewRecipe = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 flex gap-3">
+        <div className="text-gray-700 mt-6 flex gap-3">
           <button className="bg-[#4B352A] text-white px-6 py-2 rounded hover:bg-[#3e2b22] flex items-center gap-2 cursor-pointer">
             <Save className="w-4 h-4" />
             Sauvegarder
@@ -850,7 +854,7 @@ const NewRecipe = () => {
         </div>
 
         {/* Instructions */}
-        <div className="mt-8">
+        <div className="text-gray-700 mt-8">
           <h3 className="font-medium mb-4">Instruction de fabrication :</h3>
 
           <div className="space-y-4">

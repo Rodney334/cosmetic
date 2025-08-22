@@ -66,7 +66,7 @@ const MesRecettesInterface = () => {
                 placeholder="Lorem ipsum"
                 value={searchRecipe}
                 onChange={(e) => setSearchRecipe(e.target.value)}
-                className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="text-gray-700 w-full pl-10 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>

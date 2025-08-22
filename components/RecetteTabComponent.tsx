@@ -26,7 +26,7 @@ export const RecetteTab = ({
   return (
     <>
       {/* Main Table - Redesigned to match the image exactly */}
-      <div className="border border-gray-300 rounded-lg overflow-hidden mb-4 max-w-full">
+      <div className="text-gray-700 border border-gray-300 rounded-lg overflow-hidden mb-4 max-w-full">
         {/* Container with fixed dimensions and scroll */}
         <div className="max-h-96 overflow-auto">
           <div className="min-w-[800px]">

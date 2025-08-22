@@ -14,10 +14,9 @@ type PhaseTabType = {
   selectedCategory: string;
   setPhaseIngretient: (value: React.SetStateAction<IngredientType[]>) => void;
   setSelectedCategory: (value: string) => void;
-  addIngredientToPhase: (phaseId: string, ingredient: IngredientType) => void;
 };
 
-export const PhaseTab = ({
+export const IngredientTab = ({
   phaseData,
   ingredientsByCategory,
   phaseIngredient,
@@ -25,9 +24,7 @@ export const PhaseTab = ({
   selectedCategory,
   setPhaseIngretient,
   setSelectedCategory,
-  addIngredientToPhase,
 }: PhaseTabType) => {
-  const currentPhaseData = phaseData.find((el) => el.id === currentPhase._id);
   return (
     <>
       {/* Main Content Area with Categories and Ingredients Table */}
@@ -83,13 +80,7 @@ export const PhaseTab = ({
                     Ingrédients
                   </div>
                   <div className="p-3 text-center font-medium border-r border-gray-300 min-w-[80px]">
-                    ml
-                  </div>
-                  <div className="p-3 text-center font-medium border-r border-gray-300 min-w-[100px]">
-                    Gouttes
-                  </div>
-                  <div className="p-3 text-center font-medium border-r border-gray-300 min-w-[80px]">
-                    Ajouter
+                    Dosage Recommandé
                   </div>
                   <div className="p-3 text-center font-medium min-w-[80px]">
                     Guide
@@ -124,48 +115,12 @@ export const PhaseTab = ({
                       <div className="p-2 border-r border-gray-300 text-center text-sm min-w-[80px]">
                         {item.dosageRecommande}
                       </div>
-                      <div className="p-2 border-r border-gray-300 text-center text-sm min-w-[100px]">
-                        {item.dosageRecommande}
-                      </div>
-                      <div className="p-2 border-r border-gray-300 flex justify-center min-w-[80px]">
-                        {currentPhaseData?.ingredients.find(
-                          (el) => el._id === item._id
-                        ) ? (
-                          <Check className="w-6 h-6 rounded-full flex items-center justify-center text-green-600 font-bold text-sm cursor-not-allowed" />
-                        ) : (
-                          <CircleCheck
-                            className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-green-100 text-gray-600 font-bold text-sm cursor-pointer"
-                            onClick={() => {
-                              addIngredientToPhase(currentPhase._id, item);
-                            }}
-                          />
-                        )}
-                      </div>
                       <div className="p-2 flex justify-center min-w-[80px]">
                         <BookOpen className="h-6 w-6 p-0.5 bg-white border border-black rounded-md flex items-center justify-center hover:bg-gray-200 cursor-pointer" />
-                        {/* <button className="w-6 h-6 p-1 bg-white border border-black rounded-md flex items-center justify-center hover:bg-gray-200 cursor-pointer">
-                            </button> */}
                       </div>
                     </div>
                   </div>
                 ))}
-              </div>
-
-              {/* Total Row - Sticky Bottom */}
-              <div className="bg-blue-200 border-t border-gray-300">
-                <div className="grid grid-cols-5 gap-0">
-                  <div className="p-3 font-bold text-blue-800 border-r border-gray-300 min-w-[180px]">
-                    TOTAL
-                  </div>
-                  <div className="p-3 text-center font-bold text-blue-800 border-r border-gray-300 min-w-[80px]">
-                    100ml
-                  </div>
-                  <div className="p-3 text-center font-bold text-blue-800 border-r border-gray-300 min-w-[100px]">
-                    100
-                  </div>
-                  <div className="border-r border-gray-300 min-w-[80px]"></div>
-                  <div className="min-w-[80px]"></div>
-                </div>
               </div>
             </div>
           </div>
