@@ -10,12 +10,14 @@ import {
   CircleCheck,
   Trash2,
   Camera,
+  RotateCcw,
+  RefreshCw,
 } from "lucide-react";
 import { useIngredientStore } from "@/stores/ingredient.store";
 import { useSession } from "next-auth/react";
 import { usePhaseStore } from "@/stores/phase.store";
 import { RecetteTab } from "@/components/RecetteTabComponent";
-import { PhaseData } from "@/types/recipe.type";
+import { PhaseData, RecipeResult, RecipeType } from "@/types/recipe.type";
 import { PhaseType } from "@/types/phase.type";
 import {
   IngredientByCategorieType,
@@ -27,16 +29,7 @@ import axios from "axios";
 import { api } from "@/constantes/api.constante";
 import { Toaster } from "react-hot-toast";
 
-// Types définis pour corriger les erreurs TypeScript
-interface Ingredient {
-  id: number;
-  name: string;
-  family: string;
-  percentage: string;
-  cost: string;
-}
-
-const RecipeInterface = () => {
+const NewRecipe = () => {
   const { data: session } = useSession();
   const {
     ingredientAll,
@@ -55,6 +48,50 @@ const RecipeInterface = () => {
   const [activeTab, setActiveTab] = useState<string>("tous");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [phaseIngredient, setPhaseIngretient] = useState<IngredientType[]>([]);
+  const [recipeResult, setRecipeResult] = useState<RecipeResult>();
+
+  const [recipeName, setRecipeName] = useState<string>("Recette");
+  const [description, setDescription] = useState<string>(
+    "Une description pour le test de la recette"
+  );
+  const [totalQuantity, setTotalQuantity] = useState<number>(100);
+  const [unit, setUnit] = useState<string>("g");
+  const [qsp100, setQsp100] = useState<string>("Eau déminéralisée");
+  const [hotRecipe, setHotRecipe] = useState<boolean>(false);
+  const [coldRecipe, setColdRecipe] = useState<boolean>(false);
+  const [searchIngredient, setSearchIngredient] = useState<string>("");
+
+  const [isCalculating, setIsCalculating] = useState<boolean>(false);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [haveLocalStorage, setHaveLocalStorage] = useState<boolean>(false);
+  const [switcher, setSwitcher] = useState<boolean>(false);
+
+  useEffect(() => {
+    const localRecette = localStorage.getItem("currentRecette");
+    if (localRecette) {
+      setHaveLocalStorage(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const localRecette = localStorage.getItem("currentRecette");
+    const localResult = localStorage.getItem("currentResult");
+    if (haveLocalStorage && localRecette && localResult) {
+      const data: RecipeType = JSON.parse(localRecette);
+      const resultData: RecipeResult = JSON.parse(localResult);
+      setRecipeName(data.nom);
+      setDescription(data.description);
+      setTotalQuantity(data.poidsTotal);
+      setRecipeResult(resultData);
+    } else {
+      setRecipeName("");
+      setDescription("");
+      setTotalQuantity(0);
+      setRecipeResult(undefined);
+      localStorage.removeItem("currentRecette");
+      localStorage.removeItem("currentResult");
+    }
+  }, [haveLocalStorage]);
 
   useEffect(() => {
     if (session && session.accessToken) {
@@ -85,15 +122,6 @@ const RecipeInterface = () => {
       setPhaseData(initialPhaseData);
     }
   }, [phaseAll]);
-
-  const [recipeName, setRecipeName] = useState<string>("");
-  const [description, setDescription] = useState<string>("Une description");
-  const [totalQuantity, setTotalQuantity] = useState<number>(100);
-  const [unit, setUnit] = useState<string>("g");
-  const [qsp100, setQsp100] = useState<string>("Eau déminéralisée");
-  const [hotRecipe, setHotRecipe] = useState<boolean>(false);
-  const [coldRecipe, setColdRecipe] = useState<boolean>(false);
-  const [searchIngredient, setSearchIngredient] = useState<string>("");
 
   // const updateIngredient = (
   //   phaseIndex: number,
@@ -240,8 +268,31 @@ const RecipeInterface = () => {
     });
   };
 
+  const addRecipeToPhase = async (
+    phaseAll: PhaseType[],
+    createdRecipe: RecipeType
+  ) => {
+    try {
+      phaseAll.map(async (item, index) => {
+        const response = await axios.post(
+          `${api.base_url}/phase/${item._id}/add-recipe`,
+          { recipeId: createdRecipe._id },
+          {
+            headers: {
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+          }
+        );
+        return response ? true : false;
+      });
+    } catch (error: any) {
+      console.log("something gone wrong", error.response.data);
+    }
+  };
+
   const createRecipe = async () => {
     try {
+      setIsCreating(true);
       const data = {
         nom: recipeName,
         description: description,
@@ -255,10 +306,87 @@ const RecipeInterface = () => {
       });
       console.log(response.data);
       localStorage.setItem("currentRecette", JSON.stringify(response.data));
+      addRecipeToPhase(phaseAll, response.data);
       CustomSuccessToast("Enregistré");
     } catch (error) {
       CustomErrorToast("La création de la récette a échoué.");
+    } finally {
+      setIsCreating(false);
     }
+  };
+
+  const saveIngredientForRecipe = async (recipeId: string) => {
+    try {
+      phaseData.map((item) => {
+        const phaseId = item.id === "0" ? QSPphase?._id : item.id;
+        item.ingredients.map(async (ingredient) => {
+          const data = {
+            recipeId: recipeId,
+            ingredientId: ingredient._id,
+            phaseId: phaseId,
+            quantite: ingredient.quantite,
+            unite: "%",
+          };
+          await axios.post(`${api.base_url}/recipeingredient/`, data, {
+            headers: {
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+          });
+        });
+      });
+    } catch (error: any) {
+      console.log("save ingredient error :", error.response.data);
+    }
+  };
+
+  const finalResult = async (recipeId: string) => {
+    try {
+      const response = await axios.get(
+        `${api.base_url}/recipe/${recipeId}/finalresult`,
+        {
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+        }
+      );
+      console.log({ response: response.data });
+      setRecipeResult(response.data);
+      localStorage.setItem("currentResult", response.data);
+      CustomSuccessToast("Calcul effectué.");
+    } catch (error: any) {
+      console.log("finale result error :", error.response.data);
+    }
+  };
+
+  const handleCalculate = async () => {
+    try {
+      setIsCalculating(true);
+      const localRecette = localStorage.getItem("currentRecette");
+      if (localRecette) {
+        const recipe = JSON.parse(localRecette);
+        await saveIngredientForRecipe(recipe._id);
+        await finalResult(recipe._id);
+        setSwitcher(true);
+      } else {
+        CustomErrorToast("Valider d'abord votre recette");
+      }
+      console.log("try to calculate");
+    } catch (error) {
+      console.log("error: ", error);
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
+  const resertReceipe = () => {
+    console.log("resert");
+    localStorage.removeItem("currentRecette");
+    localStorage.removeItem("currentResult");
+    setRecipeName("");
+    setDescription("");
+    setTotalQuantity(0);
+    setRecipeResult(undefined);
+    CustomSuccessToast("Recette réinitialisée");
   };
 
   // const getTotalPercentage = (): number => {
@@ -364,10 +492,13 @@ const RecipeInterface = () => {
             <span className="text-gray-600">(= {calculatedTotal} ml)</span>
           </div>
           <button
-            className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#3e2b22] cursor-pointer"
+            className={`${
+              isCreating ? "animate-pulse" : ""
+            } bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#3e2b22] cursor-pointer`}
             onClick={() => createRecipe()}
+            disabled={isCreating}
           >
-            Valider
+            {isCreating ? "Patientez..." : "Valider"}
           </button>
         </div>
 
@@ -469,52 +600,75 @@ const RecipeInterface = () => {
             />
           </div>
           <button
-            className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
-            onClick={() => {
-              console.log({ phaseData });
-            }}
+            className={`${
+              isCalculating ? "animate-pulse" : ""
+            } bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer`}
+            onClick={() => handleCalculate()}
+            disabled={isCalculating}
           >
             <Calculator className="w-4 h-4" />
-            Calculer
+            {isCalculating ? "Patientez..." : "Calculer"}
+          </button>
+
+          <button
+            className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
+            onClick={() => resertReceipe()}
+          >
+            <RotateCcw className="w-4 h-4" />
+            Réinitialiser
           </button>
         </div>
+
+        {recipeResult && (
+          <button
+            className="bg-[#4B352A] text-white px-4 py-2 mb-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
+            onClick={() => {
+              setSwitcher(!switcher);
+            }}
+          >
+            <RefreshCw className="w-4 h-4" />
+            {!switcher ? "Retourner à la préparation" : "Voir le résultat"}
+          </button>
+        )}
 
         {/* Phase Tabs */}
-        <div className="mb-4 flex gap-2">
-          <button
-            onClick={() => {
-              setActiveTab("tous");
-              setCurrentPhase(null);
-            }}
-            className={`px-4 py-2 rounded font-medium cursor-pointer ${
-              activeTab === "tous" && "bg-[#4B352A] text-white"
-            }`}
-          >
-            Préparation
-          </button>
-          {phaseAll.map((item, index) => (
+        {(!recipeResult || switcher) && (
+          <div className="mb-4 flex gap-2">
             <button
-              key={index}
               onClick={() => {
-                setActiveTab(item._id);
-                setCurrentPhase(item);
-                setPhaseIngretient([]);
+                setActiveTab("tous");
+                setCurrentPhase(null);
               }}
               className={`px-4 py-2 rounded font-medium cursor-pointer ${
-                activeTab === item._id
-                  ? "bg-[#4B352A] text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                activeTab === "tous" && "bg-[#4B352A] text-white"
               }`}
             >
-              {item.nom}
+              Préparation
             </button>
-          ))}
-          <span className="text-orange-600 text-sm self-center ml-2 cursor-pointer">
-            (Cliquer sur une Phase pour ajouter les ingrédients)
-          </span>
-        </div>
+            {phaseAll.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setActiveTab(item._id);
+                  setCurrentPhase(item);
+                  setPhaseIngretient([]);
+                }}
+                className={`px-4 py-2 rounded font-medium cursor-pointer ${
+                  activeTab === item._id
+                    ? "bg-[#4B352A] text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                {item.nom}
+              </button>
+            ))}
+            <span className="text-orange-600 text-sm self-center ml-2 cursor-pointer">
+              (Cliquer sur une Phase pour ajouter les ingrédients)
+            </span>
+          </div>
+        )}
 
-        {!currentPhase && (
+        {!currentPhase && (!recipeResult || switcher) && (
           <RecetteTab
             QSPphase={QSPphase}
             phaseData={phaseData}
@@ -538,11 +692,141 @@ const RecipeInterface = () => {
         )}
 
         {/* Warning */}
-        <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded flex items-center gap-2">
+        {/* <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded flex items-center gap-2">
           <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-orange-500"></div>
           <span className="text-orange-700 text-sm">
             La somme des ingrédients est égale à 0%. Créer votre recette !
           </span>
+        </div> */}
+
+        {/* Résultat finale de la préparation */}
+        <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
+          {recipeResult && !switcher && (
+            <div className="space-y-6">
+              {/* En-tête de la recette */}
+              <div className="bg-blue-50 p-3 rounded border border-blue-100">
+                <h3 className="font-semibold text-blue-800 mb-2">
+                  📋 Informations de la recette
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                  <div>
+                    <span className="font-medium">Nom:</span>{" "}
+                    {recipeResult.data.recette.nom}
+                  </div>
+                  <div>
+                    <span className="font-medium">Poids cible:</span>{" "}
+                    {recipeResult.data.recette.poidsCible}g
+                  </div>
+                  <div>
+                    <span className="font-medium">Date:</span>{" "}
+                    {new Date(
+                      recipeResult.data.recette.dateCreation
+                    ).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Tableau des ingrédients */}
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-3">
+                  🧪 Composition de la recette
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white border border-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                          Phase
+                        </th>
+                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                          Type
+                        </th>
+                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                          Ingrédient
+                        </th>
+                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                          %
+                        </th>
+                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                          Grammes
+                        </th>
+                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                          Gouttes
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recipeResult.data.tableau.map((item, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-2 border-b">{item.phase}</td>
+                          <td className="px-4 py-2 border-b">{item.type}</td>
+                          <td className="px-4 py-2 border-b font-medium">
+                            {item.ingredient}
+                          </td>
+                          <td className="px-4 py-2 border-b">
+                            {item.pourcentage}%
+                          </td>
+                          <td className="px-4 py-2 border-b">{item.g}g</td>
+                          <td className="px-4 py-2 border-b">
+                            {item.gouttes || "-"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Totaux */}
+              <div className="bg-green-50 p-3 rounded border border-green-100">
+                <h3 className="font-semibold text-green-800 mb-2">📊 Totaux</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  <div>
+                    <span className="font-medium">Prix total:</span>{" "}
+                    {recipeResult.data.totaux.prixTotal}{" "}
+                    {recipeResult.data.totaux.prixTotal > 0
+                      ? recipeResult.data.tableau[0]?.devise
+                      : "EUR"}
+                  </div>
+                  <div>
+                    <span className="font-medium">Masse totale:</span>{" "}
+                    {recipeResult.data.totaux.masseTotale}g
+                  </div>
+                  <div>
+                    <span className="font-medium">Volume total:</span>{" "}
+                    {recipeResult.data.totaux.volumeTotal}
+                  </div>
+                  <div>
+                    <span className="font-medium">Écart poids:</span>{" "}
+                    {recipeResult.data.totaux.ecartPoids}g
+                  </div>
+                </div>
+              </div>
+
+              {/* Warnings */}
+              {recipeResult.data.warnings &&
+                recipeResult.data.warnings.length > 0 && (
+                  <div className="bg-yellow-50 p-3 rounded border border-yellow-100">
+                    <h3 className="font-semibold text-yellow-800 mb-2">
+                      ⚠️ Avertissements
+                    </h3>
+                    <ul className="list-disc list-inside text-sm text-yellow-700">
+                      {recipeResult.data.warnings.map((warning, index) => (
+                        <li key={index}>{warning}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+              {/* Message de statut */}
+              <div className="bg-green-50 p-3 rounded border border-green-200 flex items-center gap-2">
+                <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-green-500"></div>
+                <span className="text-sm text-green-700">
+                  {recipeResult.message}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -652,4 +936,4 @@ const RecipeInterface = () => {
   );
 };
 
-export default RecipeInterface;
+export default NewRecipe;

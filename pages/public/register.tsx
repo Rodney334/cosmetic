@@ -12,7 +12,7 @@ import { RegisterDataType } from "@/types/auth.type";
 import { api } from "@/constantes/api.constante";
 import { CustomErrorToast, CustomSuccessToast } from "@/components/CustomToast";
 
-const SignupPage = () => {
+const Register = () => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const genres = [
@@ -129,8 +129,8 @@ const SignupPage = () => {
             className="mx-auto md:mx-0"
           />
         </div>
-      </div>ù
-
+      </div>
+      ù
       <div className="w-full md:w-1/2 flex items-center justify-center px-4 mt-8 md:px-8 py-12">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl">
@@ -409,4 +409,4 @@ const SignupPage = () => {
   );
 };
 
-export default SignupPage;
+export default Register;
