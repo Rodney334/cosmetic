@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || "Secrete key 1234567890",
   pages: {
     signIn: "/public/login",
   },

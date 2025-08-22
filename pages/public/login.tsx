@@ -123,7 +123,7 @@ const Login = () => {
                     value={formik.values.email}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                     required
                   />
                   {formik.touched.email && formik.errors.email && (
@@ -144,7 +144,7 @@ const Login = () => {
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                     required
                   />
                   <button
@@ -181,14 +181,16 @@ const Login = () => {
 
                 <button
                   type="submit"
-                  className="w-full bg-gray-400 hover:bg-gray-500 text-white font-medium py-3 px-4 rounded-full transition-colors duration-200 cursor-pointer"
+                  className={`${
+                    isLoading ? "animate-pulse" : ""
+                  } w-full bg-gray-400 hover:bg-gray-500 text-white font-medium py-3 px-4 rounded-full transition-colors duration-200 cursor-pointer`}
                   disabled={isLoading}
                 >
                   Se connecter
                 </button>
               </form>
 
-              <div className="mt-6 mb-6">
+              {/* <div className="mt-6 mb-6">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-gray-300" />
@@ -197,20 +199,20 @@ const Login = () => {
                     <span className="px-4 bg-white text-gray-500">OU</span>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
-              <button
+              {/* <button
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                className="text-gray-600 w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
               >
                 <FcGoogle className="w-5 h-5 mr-3" />
                 Continuer avec Google
-              </button>
+              </button> */}
 
-              <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+              {/* <p className="text-xs text-gray-500 mt-4 leading-relaxed">
                 En créant un compte, j&apos;accepte les conditions
                 d&apos;utilisation
-              </p>
+              </p> */}
             </div>
           </div>
 
