@@ -14,7 +14,10 @@ import { getToken } from "next-auth/jwt";
 const protectedRoutes = ["/private"];
 
 export async function middleware(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET || "Secrete key 1234567890",
+  });
 
   // Check if the path is protected
   const isProtected = protectedRoutes.some((path) =>
