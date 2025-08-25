@@ -54,7 +54,7 @@ const Utilisateurs: NextPageWithLayout = () => {
   const [currentUsers, setCurrentUsers] = useState<UserType[]>([]);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemPerPages] = useState(3);
+  const [itemsPerPage, setItemPerPages] = useState(5);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -331,6 +331,20 @@ const Utilisateurs: NextPageWithLayout = () => {
 
       {/* Pagination (inchangé) */}
       <div className="flex flex-col md:flex-row justify-between items-center mt-6 text-sm gap-4">
+        <div className="text-gray-700 flex items-center gap-2">
+          <label htmlFor="itemperpage">Item par page :</label>
+          <select
+            name="itemperpage"
+            id="itemperpage"
+            onChange={(e) => setItemPerPages(Number(e.target.value))}
+          >
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="15">15</option>
+            <option value="25">25</option>
+            <option value="35">35</option>
+          </select>
+        </div>
         <p className="text-gray-600">
           Affichage {startIndex + 1}-{Math.min(endIndex, userAll.length)} sur{" "}
           {userAll.length} utilisateurs

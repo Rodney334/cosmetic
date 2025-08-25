@@ -29,7 +29,10 @@ const Recettes: NextPageWithLayout = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [currentRecipes, setCurrentRecipes] = useState<RecipeType[]>([]);
   const [totalPages, setTotalPages] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(2);
+  const [itemsPerPage, setItemPerPages] = useState(5);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
 
   useEffect(() => {
     if (session?.accessToken) {
@@ -44,7 +47,7 @@ const Recettes: NextPageWithLayout = () => {
       setCurrentRecipes(recettes.slice(startIndex, endIndex));
       setTotalPages(Math.ceil(recettes.length / itemsPerPage));
     }
-  }, [recettes, currentPage]);
+  }, [recettes, currentPage, itemsPerPage]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -163,9 +166,22 @@ const Recettes: NextPageWithLayout = () => {
 
       {/* Pagination */}
       <div className="flex flex-col md:flex-row justify-between items-center mt-6 text-sm gap-4">
+        <div className="text-gray-700 flex items-center gap-2">
+          <label htmlFor="itemperpage">Item par page :</label>
+          <select
+            name="itemperpage"
+            id="itemperpage"
+            onChange={(e) => setItemPerPages(Number(e.target.value))}
+          >
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="15">15</option>
+            <option value="25">25</option>
+            <option value="35">35</option>
+          </select>
+        </div>
         <p className="text-gray-600">
-          Affichage {(currentPage - 1) * itemsPerPage + 1}-
-          {Math.min(currentPage * itemsPerPage, recettes.length)} sur{" "}
+          Affichage {startIndex + 1} -{Math.min(endIndex, recettes.length)} sur{" "}
           {recettes.length} recettes
         </p>
         <div className="flex items-center gap-1">
