@@ -7,7 +7,8 @@ import { useEffect } from "react";
 
 const HomePage = () => {
   const { data: session } = useSession();
-  const { getAllIngredient, groupIngredientsByCategory } = useIngredientStore();
+  const { getAllIngredient, groupIngredientsByCategory, getIngredientQSP } =
+    useIngredientStore();
   const { getAllUser, getUserById } = useUserStore();
   const { getAllCategory } = useCategoryStore();
   // console.log({ session, env: process.env.NEXTAUTH_SECRET });
@@ -18,6 +19,7 @@ const HomePage = () => {
       getUserById(session.accessToken, session.user.id);
       getAllUser(session.accessToken);
       getAllCategory(session.accessToken);
+      getIngredientQSP(session.accessToken);
     }
   }, [session]);
   return (

@@ -11,8 +11,10 @@ interface IngredientStoreInterface {
   ingredientAll: IngredientType[];
   ingredientsByCategory: IngredientByCategorieType[];
   ingredientsByPhase: IngredientByCategorieType[];
+  ingredientQSP: IngredientType[];
   getAllIngredient: (token: string) => Promise<void>;
   groupIngredientsByCategory: (token: string) => Promise<void>;
+  getIngredientQSP: (token: string) => Promise<void>;
   groupIngredientsByPhase: (
     token: string,
     phaseId: string
@@ -24,6 +26,7 @@ export const useIngredientStore = create<IngredientStoreInterface>(
     ingredientAll: [],
     ingredientsByCategory: [],
     ingredientsByPhase: [],
+    ingredientQSP: [],
 
     getAllIngredient: async (token: string) => {
       try {
@@ -35,7 +38,7 @@ export const useIngredientStore = create<IngredientStoreInterface>(
         // console.log(response.data);
         set({ ingredientAll: response.data });
       } catch (error) {
-        CustomErrorToast("Ingrédient erreur système");
+        console.log("Ingrédient erreur système");
       }
     },
 
@@ -58,7 +61,7 @@ export const useIngredientStore = create<IngredientStoreInterface>(
         );
         set({ ingredientsByCategory: sortedData });
       } catch (error) {
-        CustomErrorToast("Ingrédient par groupe erreur système");
+        console.log("Ingrédient par groupe erreur système");
       }
     },
 
@@ -80,8 +83,24 @@ export const useIngredientStore = create<IngredientStoreInterface>(
         );
         return sortedData;
       } catch (error) {
-        CustomErrorToast("Catégorie par phase erreur système");
+        console.log("Catégorie par phase erreur système");
         return [];
+      }
+    },
+
+    getIngredientQSP: async (token: string) => {
+      try {
+        const response: AxiosResponse<IngredientType[]> = await axios.get(
+          `${api.base_url}/ingredient/qsp`, // Adaptez l'URL selon votre API
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        set({ ingredientQSP: response.data });
+      } catch (error) {
+        console.log("Erreur lors de la récupération des ingrédients QSP");
       }
     },
   })

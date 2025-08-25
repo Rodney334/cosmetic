@@ -108,7 +108,6 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col md:flex-row justify-center">
-      <Toaster />
       <div className="w-full md:w-1/2 flex flex-col justify-start items-center md:items-start px-6 md:px-16 pt-20 md:pt-28 pb-4 md:pb-12 relative">
         <div className="max-w-md text-center md:text-left">
           <h1 className="text-white text-4xl md:text-5xl font-bold mb-4 leading-tight">
@@ -151,10 +150,11 @@ const Register = () => {
                     type="text"
                     id="nom"
                     name="nom"
+                    placeholder="Nom"
                     value={formik.values.nom}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border ${
+                    className={`w-full px-4 py-3 border text-gray-700 ${
                       formik.touched.nom && formik.errors.nom
                         ? "border-red-500"
                         : "border-gray-200"
@@ -177,10 +177,11 @@ const Register = () => {
                     type="text"
                     id="prenoms"
                     name="prenoms"
+                    placeholder="Prénoms"
                     value={formik.values.prenoms}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border ${
+                    className={`w-full px-4 py-3 border text-gray-700 ${
                       formik.touched.prenoms && formik.errors.prenoms
                         ? "border-red-500"
                         : "border-gray-200"
@@ -206,10 +207,11 @@ const Register = () => {
                   type="email"
                   id="email"
                   name="email"
+                  placeholder="Email"
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`w-full px-4 py-3 border ${
+                  className={`w-full px-4 py-3 border text-gray-700 ${
                     formik.touched.email && formik.errors.email
                       ? "border-red-500"
                       : "border-gray-200"
@@ -226,23 +228,25 @@ const Register = () => {
               <div>
                 <label
                   htmlFor="telephone"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="text-sm font-medium text-gray-700 mb-2 flex gap-1"
                 >
-                  Téléphone
+                  Téléphone{" "}
+                  <p className="text-gray-400">(229 01 22 22 22 22)</p>
                 </label>
                 <div className="flex">
-                  <div className="flex items-center px-3 border border-r-0 border-gray-200 bg-gray-50 rounded-l-lg">
+                  {/* <div className="flex items-center px-3 border border-r-0 border-gray-200 bg-gray-50 rounded-l-lg">
                     <span className="text-sm mr-2">🇺🇸</span>
                     <span className="text-gray-600">+1</span>
-                  </div>
+                  </div> */}
                   <input
                     type="tel"
                     id="telephone"
                     name="telephone"
+                    placeholder="Téléphone"
                     value={formik.values.telephone}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`flex-1 px-4 py-3 border ${
+                    className={`flex-1 px-4 py-3 border text-gray-700 ${
                       formik.touched.telephone && formik.errors.telephone
                         ? "border-red-500"
                         : "border-gray-200"
@@ -274,7 +278,9 @@ const Register = () => {
                         : "border-gray-200"
                     } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none bg-white`}
                   >
-                    <option value="">Genre</option>
+                    <option value="" className="text-gray-700">
+                      Genre
+                    </option>
                     {genres.map((genre, index) => (
                       <option key={index} value={genre.value}>
                         {genre.label}
@@ -299,17 +305,18 @@ const Register = () => {
                   htmlFor="password"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Password
+                  Mot de passe
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
                     name="password"
+                    placeholder="Mot de passe"
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 pr-12 border ${
+                    className={`w-full px-4 py-3 pr-12 border text-gray-700 ${
                       formik.touched.password && formik.errors.password
                         ? "border-red-500"
                         : "border-gray-200"

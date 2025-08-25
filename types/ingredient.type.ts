@@ -7,6 +7,7 @@ export type CategorieIngredientType = {
 };
 
 export type IngredientType = {
+  isQSP?: boolean;
   _id: string;
   nom: string;
   inci: string;

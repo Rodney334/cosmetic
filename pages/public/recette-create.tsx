@@ -33,6 +33,7 @@ const NewRecipe = () => {
   const { data: session } = useSession();
   const {
     ingredientsByCategory,
+    ingredientQSP,
     getAllIngredient,
     groupIngredientsByCategory,
   } = useIngredientStore();
@@ -48,13 +49,11 @@ const NewRecipe = () => {
   const [phaseIngredient, setPhaseIngretient] = useState<IngredientType[]>([]);
   const [recipeResult, setRecipeResult] = useState<RecipeResult>();
 
-  const [recipeName, setRecipeName] = useState<string>("Recette");
-  const [description, setDescription] = useState<string>(
-    "Une description pour le test de la recette"
-  );
+  const [recipeName, setRecipeName] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
   const [totalQuantity, setTotalQuantity] = useState<number>(100);
   const [unit, setUnit] = useState<string>("g");
-  const [qsp100, setQsp100] = useState<string>("Eau déminéralisée");
+  // const [qsp100, setQsp100] = useState<string>("Eau déminéralisée");
   const [hotRecipe, setHotRecipe] = useState<boolean>(false);
   const [coldRecipe, setColdRecipe] = useState<boolean>(false);
   const [searchIngredient, setSearchIngredient] = useState<string>("");
@@ -73,21 +72,17 @@ const NewRecipe = () => {
 
   useEffect(() => {
     const localRecette = localStorage.getItem("currentRecette");
-    const localResult = localStorage.getItem("currentResult");
-    if (haveLocalStorage && localRecette && localResult) {
+    if (haveLocalStorage && localRecette) {
       const data: RecipeType = JSON.parse(localRecette);
-      const resultData: RecipeResult = JSON.parse(localResult);
       setRecipeName(data.nom);
       setDescription(data.description);
       setTotalQuantity(data.poidsTotal);
-      setRecipeResult(resultData);
     } else {
       setRecipeName("");
       setDescription("");
       setTotalQuantity(0);
       setRecipeResult(undefined);
       localStorage.removeItem("currentRecette");
-      localStorage.removeItem("currentResult");
     }
   }, [haveLocalStorage]);
 
@@ -291,6 +286,12 @@ const NewRecipe = () => {
   const createRecipe = async () => {
     try {
       setIsCreating(true);
+      if (!recipeName || !description || totalQuantity === 0) {
+        CustomErrorToast(
+          "Tous les champs sont obligatoires et la quantité totale ne peut pas être zéro."
+        );
+        return;
+      }
       const data = {
         nom: recipeName,
         description: description,
@@ -304,6 +305,7 @@ const NewRecipe = () => {
       });
       console.log(response.data);
       localStorage.setItem("currentRecette", JSON.stringify(response.data));
+      setHaveLocalStorage(true);
       addRecipeToPhase(phaseAll, response.data);
       CustomSuccessToast("Enregistré");
     } catch (error) {
@@ -349,10 +351,10 @@ const NewRecipe = () => {
       );
       console.log({ response: response.data });
       setRecipeResult(response.data);
-      localStorage.setItem("currentResult", response.data);
       CustomSuccessToast("Calcul effectué.");
     } catch (error: any) {
       console.log("finale result error :", error.response.data);
+      CustomErrorToast("Echec du calcul.");
     }
   };
 
@@ -364,9 +366,10 @@ const NewRecipe = () => {
         const recipe = JSON.parse(localRecette);
         await saveIngredientForRecipe(recipe._id);
         await finalResult(recipe._id);
-        setSwitcher(true);
+        localStorage.removeItem("currentRecette");
       } else {
         CustomErrorToast("Valider d'abord votre recette");
+        return;
       }
       console.log("try to calculate");
     } catch (error) {
@@ -379,11 +382,12 @@ const NewRecipe = () => {
   const resertReceipe = () => {
     console.log("resert");
     localStorage.removeItem("currentRecette");
-    localStorage.removeItem("currentResult");
     setRecipeName("");
     setDescription("");
     setTotalQuantity(0);
     setRecipeResult(undefined);
+    setHaveLocalStorage(false);
+    resertReceipePhase();
     CustomSuccessToast("Recette réinitialisée");
   };
 
@@ -414,425 +418,527 @@ const NewRecipe = () => {
   const calculatedTotal: number = totalQuantity * (unit === "g" ? 1 : 1);
 
   return (
-    <div className="min-h-screen bg-[#4B352A] opacity-80 p-6 py-24">
-      <Toaster />
-      <div className="max-w-7xl mx-auto p-6 bg-white rounded-lg">
-        {/* Header */}
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="Nom de la Recette"
-            value={recipeName}
-            onChange={(e) => setRecipeName(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg text-lg text-gray-700 font-medium"
-          />
-        </div>
+    <div
+      // className=" bg-[#4B352A] py-24 opacity-80 mx-auto w-full min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat"
+      className="bg-[#4B352A] flex lg:p-12 md:p-6 p-3 lg:py-24 md:py-24 py-24 opacity-80"
+    >
+      <div className="w-full mx-auto p-4 bg-white rounded-lg">
+        {/* first step */}
+        {!haveLocalStorage && (
+          <div className="w-full mx-auto space-y-6">
+            {/* Recette name */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Nom de la Recette *
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: Crème hydratante visage"
+                value={recipeName}
+                onChange={(e) => setRecipeName(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg text-lg text-gray-900 font-medium focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none transition-colors"
+                required
+              />
+            </div>
 
-        {/* Description */}
-        <div className="mb-6 flex gap-4">
-          <div className="w-24 h-24 bg-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              id="image-upload"
-              onChange={(e) => {
-                // Handle image upload here
-                const file = e.target.files?.[0];
-                if (file) {
-                  // Process the uploaded image
-                  console.log("Image uploaded:", file);
+            {/* Description et Image */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex flex-col md:flex-row gap-6">
+                {/* Upload d'image */}
+                <div className="flex-shrink-0">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Image de la recette
+                  </label>
+                  <div className="w-24 h-24 bg-gray-100 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors border-2 border-dashed border-gray-300">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      id="image-upload"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          console.log("Image uploaded:", file);
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className="cursor-pointer flex flex-col items-center justify-center w-full h-full p-2"
+                    >
+                      <Camera className="w-6 h-6 text-gray-400 mb-1" />
+                      <span className="text-xs text-gray-500 text-center">
+                        Ajouter une image
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Description *
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-900 resize-none focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none transition-colors"
+                    placeholder="Décrivez votre recette, ses propriétés, son utilisation..."
+                    rows={4}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Quantity and Settings */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <h3 className="text-sm font-medium text-gray-700 mb-4">
+                Paramètres de quantité
+              </h3>
+
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Quantité Totale *
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={totalQuantity}
+                      onChange={(e) =>
+                        setTotalQuantity(parseInt(e.target.value) || 0)
+                      }
+                      className="w-20 p-2 border border-gray-300 rounded text-center focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none"
+                      min="0"
+                      required
+                    />
+                    <select
+                      value={unit}
+                      onChange={(e) => setUnit(e.target.value)}
+                      className="p-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none"
+                    >
+                      <option value="g">g</option>
+                      <option value="ml">ml</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <span className="text-sm text-gray-600">
+                    Équivalent: <strong>{calculatedTotal} ml</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bouton de validation */}
+            <div className="flex justify-end">
+              <button
+                className={`${
+                  isCreating ? "animate-pulse opacity-75" : "hover:bg-[#3e2b22]"
+                } bg-[#4B352A] text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed`}
+                onClick={() => createRecipe()}
+                disabled={
+                  isCreating ||
+                  !recipeName.trim() ||
+                  !description.trim() ||
+                  totalQuantity <= 0
                 }
+              >
+                {isCreating ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Création en cours...
+                  </span>
+                ) : (
+                  "Valider et continuer"
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {haveLocalStorage && (
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                <Camera className="w-8 h-8 text-gray-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {recipeName}
+                </h2>
+                <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+                  {description}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <span className="text-gray-600">Quantité totale: </span>
+                <span className="font-medium text-gray-900">
+                  {totalQuantity} {unit}
+                </span>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <span className="text-gray-600">Équivalent: </span>
+                <span className="font-medium text-gray-900">
+                  {calculatedTotal} ml
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                resertReceipe();
               }}
-            />
-            <label
-              htmlFor="image-upload"
-              className="text-gray-700 cursor-pointer flex flex-col items-center justify-center w-full h-full"
+              className="mt-4 text-sm text-[#4B352A] hover:text-[#3e2b22] underline cursor-pointer"
             >
-              <Camera className="w-6 h-6 text-gray-500 mb-1" />
-              <span className="text-xs text-gray-500">Image</span>
-            </label>
+              Modifier les informations de base
+            </button>
           </div>
+        )}
 
-          <div className="flex-1 h-24">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              defaultValue={description}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="text-gray-700 w-full p-3 border border-gray-300 rounded-lg resize-none h-full"
-              placeholder="Description de la recette..."
-              style={{ height: "calc(100% - 1.75rem)" }}
-            />
-          </div>
-        </div>
-
-        {/* Quantity and Settings */}
-        <div className="mb-6 flex items-center gap-6">
-          <div className="flex items-center gap-2 text-gray-700">
-            <label className="font-medium">Quantité Totale :</label>
-            <input
-              type="number"
-              value={totalQuantity}
-              onChange={(e) => setTotalQuantity(parseInt(e.target.value) || 0)}
-              className="w-20 p-2 border border-gray-300 rounded"
-            />
-            <select
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              className="p-2 border border-gray-300 rounded"
-            >
-              <option value="g" className="text-gray-700">
-                g
-              </option>
-              <option value="ml" className="text-gray-700">
-                ml
-              </option>
-            </select>
-            <span className="text-gray-700">(= {calculatedTotal} ml)</span>
-          </div>
-          <button
-            className={`${
-              isCreating ? "animate-pulse" : ""
-            } bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#3e2b22] cursor-pointer`}
-            onClick={() => createRecipe()}
-            disabled={isCreating}
+        {/* second step */}
+        {haveLocalStorage && (
+          <div
+            className={`my-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200`}
           >
-            {isCreating ? "Patientez..." : "Valider"}
-          </button>
-        </div>
-
-        <div className="mb-6 flex items-center gap-6">
-          <div className="flex items-center gap-2 text-gray-700">
-            <label className="font-medium">QSP 100% :</label>
-            <select
-              // value={qsp100}
-              onChange={(e) => {
-                // setQsp100(e.target.value);
-                resertReceipePhase();
-                const data = JSON.parse(e.target.value);
-                const phase = phaseAll.find((el) => {
-                  return el.allowedCategories.find(
-                    (el) => el._id === data.item.category._id
-                  );
-                });
-                if (!phase) return;
-                setQSPphase(phase);
-                addIngredientToPhase("0", data.ingredient);
-              }}
-              className="text-gray-700 p-2 border border-gray-300 rounded"
-            >
-              {ingredientsByCategory.map((item, index) => (
-                <optgroup
-                  key={index}
-                  label={
-                    phaseAll.find((el) => {
+            {/* QSP */}
+            <div className="mb-6 flex items-center gap-6">
+              <div className="flex items-center gap-2 text-gray-700">
+                <label className="font-medium">QSP 100% :</label>
+                <select
+                  // value={qsp100}
+                  onChange={(e) => {
+                    // setQsp100(e.target.value);
+                    resertReceipePhase();
+                    const data: IngredientType = JSON.parse(e.target.value);
+                    // console.log({ data });
+                    const phase = phaseAll.find((el) => {
+                      // console.log({ el, category: data.categorie });
                       return el.allowedCategories.find(
-                        (el) => el._id === item.category._id
+                        (el) => el._id === data.categorie._id
                       );
-                    })?.nom || "Phase"
-                  }
+                    });
+                    if (!phase) return;
+                    console.log("here");
+                    setQSPphase(phase);
+                    addIngredientToPhase("0", data);
+                  }}
+                  className="text-gray-700 p-2 border border-gray-300 rounded"
                 >
-                  {item.ingredients.map((ingredient, idx) => (
+                  <option value="" selected={false}>
+                    Selectionnez un QSP
+                  </option>
+                  {ingredientQSP.map((ingredient, index) => (
                     <option
-                      key={ingredient._id + index + idx}
-                      value={JSON.stringify({ ingredient, item })}
+                      key={ingredient._id + index}
+                      value={JSON.stringify(ingredient)}
                       className="text-gray-700"
                     >
                       {ingredient.nom}
                     </option>
                   ))}
-                </optgroup>
-              ))}
-              {/* <option value="Eau déminéralisée">Eau déminéralisée</option>
-              <option value="Eau florale">Eau florale</option>
-              <option value="Hydrolat">Hydrolat</option> */}
-            </select>
-          </div>
+                </select>
+              </div>
 
-          <div className="flex items-center gap-4 text-gray-700">
-            <label className="font-medium">Recette à chaud :</label>
+              <div className="flex items-center gap-4 text-gray-700">
+                <label className="font-medium">Recette à chaud :</label>
 
-            <div className="flex items-center gap-1">
-              <label htmlFor="recette-chaud-oui" className="text-sm">
-                Oui
-              </label>
-              <input
-                id="recette-chaud-oui"
-                type="radio"
-                name="temperature"
-                checked={hotRecipe}
-                onChange={() => {
-                  setHotRecipe(true);
-                  setColdRecipe(false);
-                }}
-                className="w-4 h-4 cursor-pointer"
-              />
+                <div className="flex items-center gap-1">
+                  <label htmlFor="recette-chaud-oui" className="text-sm">
+                    Oui
+                  </label>
+                  <input
+                    id="recette-chaud-oui"
+                    type="radio"
+                    name="temperature"
+                    checked={hotRecipe}
+                    onChange={() => {
+                      setHotRecipe(true);
+                      setColdRecipe(false);
+                    }}
+                    className="w-4 h-4 cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <label htmlFor="recette-chaud-non" className="text-sm">
+                    Non
+                  </label>
+                  <input
+                    id="recette-chaud-non"
+                    type="radio"
+                    name="temperature"
+                    checked={coldRecipe}
+                    onChange={() => {
+                      setColdRecipe(true);
+                      setHotRecipe(false);
+                    }}
+                    className="w-4 h-4 cursor-pointer"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              <label htmlFor="recette-chaud-non" className="text-sm">
-                Non
-              </label>
-              <input
-                id="recette-chaud-non"
-                type="radio"
-                name="temperature"
-                checked={coldRecipe}
-                onChange={() => {
-                  setColdRecipe(true);
-                  setHotRecipe(false);
-                }}
-                className="w-4 h-4 cursor-pointer"
-              />
+            {/* Search and Calculate */}
+            <div className="mb-6 flex items-center gap-4">
+              {/* <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Recherche ingrédients"
+                  value={searchIngredient}
+                  onChange={(e) => setSearchIngredient(e.target.value)}
+                  className="text-gray-700 w-full p-3 border border-gray-300 rounded-lg"
+                />
+              </div> */}
+              <div className={`w-full flex justify-start gap-2`}>
+                {!recipeResult && (
+                  <button
+                    className={`${
+                      isCalculating ? "animate-pulse" : ""
+                    } bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer`}
+                    onClick={() => handleCalculate()}
+                    disabled={isCalculating}
+                  >
+                    <Calculator className="w-4 h-4" />
+                    {isCalculating ? "Patientez..." : "Calculer"}
+                  </button>
+                )}
+
+                <button
+                  className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
+                  onClick={() => resertReceipe()}
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Réinitialiser
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Search and Calculate */}
-        <div className="mb-6 flex items-center gap-4">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Recherche ingrédients"
-              value={searchIngredient}
-              onChange={(e) => setSearchIngredient(e.target.value)}
-              className="text-gray-700 w-full p-3 border border-gray-300 rounded-lg"
-            />
-          </div>
-          <button
-            className={`${
-              isCalculating ? "animate-pulse" : ""
-            } bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer`}
-            onClick={() => handleCalculate()}
-            disabled={isCalculating}
-          >
-            <Calculator className="w-4 h-4" />
-            {isCalculating ? "Patientez..." : "Calculer"}
-          </button>
-
-          <button
-            className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
-            onClick={() => resertReceipe()}
-          >
-            <RotateCcw className="w-4 h-4" />
-            Réinitialiser
-          </button>
-        </div>
-
-        {recipeResult && (
-          <button
-            className="bg-[#4B352A] text-white px-4 py-2 mb-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
-            onClick={() => {
-              setSwitcher(!switcher);
-            }}
-          >
-            <RefreshCw className="w-4 h-4" />
-            {!switcher ? "Retourner à la préparation" : "Voir le résultat"}
-          </button>
-        )}
-
-        {/* Phase Tabs */}
-        {(!recipeResult || switcher) && (
-          <div className="mb-4 flex gap-2">
-            <button
-              onClick={() => {
-                setActiveTab("tous");
-                setCurrentPhase(null);
-              }}
-              className={`px-4 py-2 rounded font-medium text-gray-700 hover:bg-gray-300 cursor-pointer ${
-                activeTab === "tous" &&
-                "bg-[#4B352A] text-white hover:text-gray-700"
-              }`}
-            >
-              Préparation
-            </button>
-            {phaseAll.map((item, index) => (
+            {/* Switch btn */}
+            {/* {recipeResult && (
               <button
-                key={index}
+                className="bg-[#4B352A] text-white px-4 py-2 mb-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
                 onClick={() => {
-                  setActiveTab(item._id);
-                  setCurrentPhase(item);
-                  setPhaseIngretient([]);
+                  setSwitcher(!switcher);
                 }}
-                className={`px-4 py-2 rounded font-medium cursor-pointer ${
-                  activeTab === item._id
-                    ? "bg-[#4B352A] text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
               >
-                {item.nom}
+                <RefreshCw className="w-4 h-4" />
+                {switcher ? "Retourner à la préparation" : "Voir le résultat"}
               </button>
-            ))}
-            <span className="text-orange-600 text-sm self-center ml-2 cursor-pointer">
-              (Cliquer sur une Phase pour ajouter les ingrédients)
-            </span>
+            )} */}
+
+            {/* Préparation, Phase list */}
+            {!recipeResult && (
+              <div className="mb-4 flex gap-2">
+                <button
+                  onClick={() => {
+                    setActiveTab("tous");
+                    setCurrentPhase(null);
+                  }}
+                  className={`px-4 py-2 rounded font-medium text-gray-700 hover:bg-gray-300 cursor-pointer ${
+                    activeTab === "tous" &&
+                    "bg-[#4B352A] text-white hover:text-gray-700"
+                  }`}
+                >
+                  Préparation
+                </button>
+                {phaseAll.map((item, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setActiveTab(item._id);
+                      setCurrentPhase(item);
+                      setPhaseIngretient([]);
+                    }}
+                    className={`px-4 py-2 rounded font-medium cursor-pointer ${
+                      activeTab === item._id
+                        ? "bg-[#4B352A] text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    {item.nom}
+                  </button>
+                ))}
+                <span className="text-orange-600 text-sm self-center ml-2 cursor-pointer">
+                  (Cliquer sur une Phase pour ajouter les ingrédients)
+                </span>
+              </div>
+            )}
+
+            {/* Recette tab */}
+            {!currentPhase && !recipeResult && (
+              <RecetteTab
+                QSPphase={QSPphase}
+                phaseData={phaseData}
+                removeIngredientFromPhase={removeIngredientFromPhase}
+                updateIngredientQuantity={updateIngredientQuantity}
+              />
+            )}
+
+            {/* Phase tab */}
+            {currentPhase && (
+              <PhaseTab
+                phaseData={phaseData}
+                ingredientsByCategory={ingredientsByCategory}
+                phaseIngredient={phaseIngredient}
+                currentPhase={currentPhase}
+                selectedCategory={selectedCategory}
+                setPhaseIngretient={setPhaseIngretient}
+                setSelectedCategory={setSelectedCategory}
+                addIngredientToPhase={addIngredientToPhase}
+              />
+            )}
+
+            {/* Résultat finale de la préparation */}
+            <div className="text-gray-700 mt-4 p-4 bg-white border border-gray-200 rounded-lg">
+              {recipeResult && (
+                <div className="space-y-6">
+                  {/* En-tête de la recette */}
+                  <div className="bg-blue-50 p-3 rounded border border-blue-100">
+                    <h3 className="font-semibold text-blue-800 mb-2">
+                      📋 Informations de la recette
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                      <div>
+                        <span className="font-medium">Nom:</span>{" "}
+                        {recipeResult.data.recette.nom}
+                      </div>
+                      <div>
+                        <span className="font-medium">Poids cible:</span>{" "}
+                        {recipeResult.data.recette.poidsCible}g
+                      </div>
+                      <div>
+                        <span className="font-medium">Date:</span>{" "}
+                        {new Date(
+                          recipeResult.data.recette.dateCreation
+                        ).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tableau des ingrédients */}
+                  <div>
+                    <h3 className="font-semibold text-gray-700 mb-3">
+                      🧪 Composition de la recette
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full bg-white border border-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                              Phase
+                            </th>
+                            <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                              Type
+                            </th>
+                            <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                              Ingrédient
+                            </th>
+                            <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                              %
+                            </th>
+                            <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                              Grammes
+                            </th>
+                            <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                              Gouttes
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {recipeResult.data.tableau.map((item, index) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-4 py-2 border-b">
+                                {item.phase}
+                              </td>
+                              <td className="px-4 py-2 border-b">
+                                {item.type}
+                              </td>
+                              <td className="px-4 py-2 border-b font-medium">
+                                {item.ingredient}
+                              </td>
+                              <td className="px-4 py-2 border-b">
+                                {item.pourcentage}%
+                              </td>
+                              <td className="px-4 py-2 border-b">{item.g}g</td>
+                              <td className="px-4 py-2 border-b">
+                                {item.gouttes || "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Totaux */}
+                  <div className="bg-green-50 p-3 rounded border border-green-100">
+                    <h3 className="font-semibold text-green-800 mb-2">
+                      📊 Totaux
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div>
+                        <span className="font-medium">Prix total:</span>{" "}
+                        {recipeResult.data.totaux.prixTotal}{" "}
+                        {recipeResult.data.totaux.prixTotal > 0
+                          ? recipeResult.data.tableau[0]?.devise
+                          : "EUR"}
+                      </div>
+                      <div>
+                        <span className="font-medium">Masse totale:</span>{" "}
+                        {recipeResult.data.totaux.masseTotale}g
+                      </div>
+                      <div>
+                        <span className="font-medium">Volume total:</span>{" "}
+                        {recipeResult.data.totaux.volumeTotal}
+                      </div>
+                      <div>
+                        <span className="font-medium">Écart poids:</span>{" "}
+                        {recipeResult.data.totaux.ecartPoids}g
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Warnings */}
+                  {recipeResult.data.warnings &&
+                    recipeResult.data.warnings.length > 0 && (
+                      <div className="bg-yellow-50 p-3 rounded border border-yellow-100">
+                        <h3 className="font-semibold text-yellow-800 mb-2">
+                          ⚠️ Avertissements
+                        </h3>
+                        <ul className="list-disc list-inside text-sm text-yellow-700">
+                          {recipeResult.data.warnings.map((warning, index) => (
+                            <li key={index}>{warning}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                  {/* Message de statut */}
+                  <div className="bg-green-50 p-3 rounded border border-green-200 flex items-center gap-2">
+                    <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-green-500"></div>
+                    <span className="text-sm text-green-700">
+                      {recipeResult.message}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-
-        {!currentPhase && (!recipeResult || switcher) && (
-          <RecetteTab
-            QSPphase={QSPphase}
-            phaseData={phaseData}
-            removeIngredientFromPhase={removeIngredientFromPhase}
-            updateIngredientQuantity={updateIngredientQuantity}
-          />
-        )}
-
-        {/* Main Content Area with Categories and Ingredients Table */}
-        {currentPhase && (
-          <PhaseTab
-            phaseData={phaseData}
-            ingredientsByCategory={ingredientsByCategory}
-            phaseIngredient={phaseIngredient}
-            currentPhase={currentPhase}
-            selectedCategory={selectedCategory}
-            setPhaseIngretient={setPhaseIngretient}
-            setSelectedCategory={setSelectedCategory}
-            addIngredientToPhase={addIngredientToPhase}
-          />
         )}
 
         {/* Warning */}
         {/* <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded flex items-center gap-2">
-          <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-orange-500"></div>
-          <span className="text-orange-700 text-sm">
-            La somme des ingrédients est égale à 0%. Créer votre recette !
-          </span>
-        </div> */}
-
-        {/* Résultat finale de la préparation */}
-        <div className="text-gray-700 mt-4 p-4 bg-white border border-gray-200 rounded-lg">
-          {recipeResult && !switcher && (
-            <div className="space-y-6">
-              {/* En-tête de la recette */}
-              <div className="bg-blue-50 p-3 rounded border border-blue-100">
-                <h3 className="font-semibold text-blue-800 mb-2">
-                  📋 Informations de la recette
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
-                  <div>
-                    <span className="font-medium">Nom:</span>{" "}
-                    {recipeResult.data.recette.nom}
-                  </div>
-                  <div>
-                    <span className="font-medium">Poids cible:</span>{" "}
-                    {recipeResult.data.recette.poidsCible}g
-                  </div>
-                  <div>
-                    <span className="font-medium">Date:</span>{" "}
-                    {new Date(
-                      recipeResult.data.recette.dateCreation
-                    ).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-
-              {/* Tableau des ingrédients */}
-              <div>
-                <h3 className="font-semibold text-gray-700 mb-3">
-                  🧪 Composition de la recette
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full bg-white border border-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
-                          Phase
-                        </th>
-                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
-                          Type
-                        </th>
-                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
-                          Ingrédient
-                        </th>
-                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
-                          %
-                        </th>
-                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
-                          Grammes
-                        </th>
-                        <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
-                          Gouttes
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recipeResult.data.tableau.map((item, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                          <td className="px-4 py-2 border-b">{item.phase}</td>
-                          <td className="px-4 py-2 border-b">{item.type}</td>
-                          <td className="px-4 py-2 border-b font-medium">
-                            {item.ingredient}
-                          </td>
-                          <td className="px-4 py-2 border-b">
-                            {item.pourcentage}%
-                          </td>
-                          <td className="px-4 py-2 border-b">{item.g}g</td>
-                          <td className="px-4 py-2 border-b">
-                            {item.gouttes || "-"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Totaux */}
-              <div className="bg-green-50 p-3 rounded border border-green-100">
-                <h3 className="font-semibold text-green-800 mb-2">📊 Totaux</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                  <div>
-                    <span className="font-medium">Prix total:</span>{" "}
-                    {recipeResult.data.totaux.prixTotal}{" "}
-                    {recipeResult.data.totaux.prixTotal > 0
-                      ? recipeResult.data.tableau[0]?.devise
-                      : "EUR"}
-                  </div>
-                  <div>
-                    <span className="font-medium">Masse totale:</span>{" "}
-                    {recipeResult.data.totaux.masseTotale}g
-                  </div>
-                  <div>
-                    <span className="font-medium">Volume total:</span>{" "}
-                    {recipeResult.data.totaux.volumeTotal}
-                  </div>
-                  <div>
-                    <span className="font-medium">Écart poids:</span>{" "}
-                    {recipeResult.data.totaux.ecartPoids}g
-                  </div>
-                </div>
-              </div>
-
-              {/* Warnings */}
-              {recipeResult.data.warnings &&
-                recipeResult.data.warnings.length > 0 && (
-                  <div className="bg-yellow-50 p-3 rounded border border-yellow-100">
-                    <h3 className="font-semibold text-yellow-800 mb-2">
-                      ⚠️ Avertissements
-                    </h3>
-                    <ul className="list-disc list-inside text-sm text-yellow-700">
-                      {recipeResult.data.warnings.map((warning, index) => (
-                        <li key={index}>{warning}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-              {/* Message de statut */}
-              <div className="bg-green-50 p-3 rounded border border-green-200 flex items-center gap-2">
-                <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-green-500"></div>
-                <span className="text-sm text-green-700">
-                  {recipeResult.message}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
+              <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-orange-500"></div>
+              <span className="text-orange-700 text-sm">
+                La somme des ingrédients est égale à 0%. Créer votre recette !
+              </span>
+            </div> */}
         {/* Action Buttons */}
         <div className="text-gray-700 mt-6 flex gap-3">
           <button className="bg-[#4B352A] text-white px-6 py-2 rounded hover:bg-[#3e2b22] flex items-center gap-2 cursor-pointer">

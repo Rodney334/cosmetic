@@ -66,7 +66,7 @@ const Login = () => {
             "Erreur de connexion. Veuillez vérifier vos informations."
           );
         } else {
-          console.log("result:", result);
+          // console.log("result:", result);
           CustomSuccessToast("Connexion réussie ! Redirection en cours...");
           const id = setTimeout(() => router.push("/"), 2000);
           setTimeoutId(id);
@@ -101,7 +101,6 @@ const Login = () => {
       className="mx-auto max-w-7xl w-full px-4 mt-20 min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: "url('/assets/bg_login.png')" }}
     >
-      <Toaster />
       <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full overflow-hidden">
         <div className="flex flex-col lg:flex-row">
           {/* Section Connexion */}
