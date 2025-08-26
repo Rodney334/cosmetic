@@ -61,6 +61,7 @@ const NewRecipe = () => {
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [haveLocalStorage, setHaveLocalStorage] = useState<boolean>(false);
+  const [haveQSP, setHaveQSP] = useState<boolean>(false);
   const [switcher, setSwitcher] = useState<boolean>(false);
 
   useEffect(() => {
@@ -137,7 +138,7 @@ const NewRecipe = () => {
   // };
 
   // Pour ajouter un ingrédient à une phase spécifique
-  const addIngredientToPhase = (
+  const addIngredientToPhase = async (
     phaseId: string,
     ingredient: IngredientType
   ) => {
@@ -158,7 +159,7 @@ const NewRecipe = () => {
   };
 
   // Pour ajouter un ingrédient à une phase spécifique
-  const resertReceipePhase = () => {
+  const resertReceipePhase = async () => {
     setPhaseData((prev) =>
       prev.map((phase) => {
         return { ...phase, ingredients: [] };
@@ -379,7 +380,7 @@ const NewRecipe = () => {
     }
   };
 
-  const resertReceipe = () => {
+  const resertReceipe = async () => {
     console.log("resert");
     localStorage.removeItem("currentRecette");
     setRecipeName("");
@@ -387,7 +388,8 @@ const NewRecipe = () => {
     setTotalQuantity(0);
     setRecipeResult(undefined);
     setHaveLocalStorage(false);
-    resertReceipePhase();
+    setHaveQSP(false);
+    await resertReceipePhase();
     CustomSuccessToast("Recette réinitialisée");
   };
 
@@ -427,8 +429,8 @@ const NewRecipe = () => {
         {!haveLocalStorage && (
           <div className="w-full mx-auto space-y-6">
             {/* Recette name */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+            <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Nom de la Recette *
               </label>
               <input
@@ -442,7 +444,7 @@ const NewRecipe = () => {
             </div>
 
             {/* Description et Image */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-200">
               <div className="flex flex-col md:flex-row gap-6">
                 {/* Upload d'image */}
                 <div className="flex-shrink-0">
@@ -476,13 +478,13 @@ const NewRecipe = () => {
 
                 {/* Description */}
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Description *
                   </label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-900 resize-none focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none transition-colors"
+                    className="w-full p-2 border border-gray-300 rounded-lg text-gray-900 resize-none focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none transition-colors"
                     placeholder="Décrivez votre recette, ses propriétés, son utilisation..."
                     rows={4}
                     required
@@ -492,8 +494,8 @@ const NewRecipe = () => {
             </div>
 
             {/* Quantity and Settings */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-700 mb-4">
+            <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
                 Paramètres de quantité
               </h3>
 
@@ -509,17 +511,21 @@ const NewRecipe = () => {
                       onChange={(e) =>
                         setTotalQuantity(parseInt(e.target.value) || 0)
                       }
-                      className="w-20 p-2 border border-gray-300 rounded text-center focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none"
+                      className="w-20 p-2 text-gray-700 border border-gray-300 rounded text-center focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none"
                       min="0"
                       required
                     />
                     <select
                       value={unit}
                       onChange={(e) => setUnit(e.target.value)}
-                      className="p-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none"
+                      className="p-2 border text-gray-700 border-gray-300 rounded focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none"
                     >
-                      <option value="g">g</option>
-                      <option value="ml">ml</option>
+                      <option value="g" className="text-gray-700">
+                        g
+                      </option>
+                      <option value="ml" className="text-gray-700">
+                        ml
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -591,8 +597,8 @@ const NewRecipe = () => {
             </div>
 
             <button
-              onClick={() => {
-                resertReceipe();
+              onClick={async () => {
+                await resertReceipe();
               }}
               className="mt-4 text-sm text-[#4B352A] hover:text-[#3e2b22] underline cursor-pointer"
             >
@@ -601,10 +607,9 @@ const NewRecipe = () => {
           </div>
         )}
 
-        {/* second step */}
         {haveLocalStorage && (
           <div
-            className={`my-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200`}
+            className={`my-2 bg-white p-2 rounded-lg shadow-sm border border-gray-200`}
           >
             {/* QSP */}
             <div className="mb-6 flex items-center gap-6">
@@ -612,9 +617,9 @@ const NewRecipe = () => {
                 <label className="font-medium">QSP 100% :</label>
                 <select
                   // value={qsp100}
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     // setQsp100(e.target.value);
-                    resertReceipePhase();
+                    await resertReceipePhase();
                     const data: IngredientType = JSON.parse(e.target.value);
                     // console.log({ data });
                     const phase = phaseAll.find((el) => {
@@ -626,7 +631,8 @@ const NewRecipe = () => {
                     if (!phase) return;
                     console.log("here");
                     setQSPphase(phase);
-                    addIngredientToPhase("0", data);
+                    setHaveQSP(true);
+                    await addIngredientToPhase("0", data);
                   }}
                   className="text-gray-700 p-2 border border-gray-300 rounded"
                 >
@@ -683,7 +689,14 @@ const NewRecipe = () => {
                 </div>
               </div>
             </div>
+          </div>
+        )}
 
+        {/* second step */}
+        {haveLocalStorage && haveQSP && (
+          <div
+            className={`my-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200`}
+          >
             {/* Search and Calculate */}
             <div className="mb-6 flex items-center gap-4">
               {/* <div className="flex-1">
@@ -711,7 +724,7 @@ const NewRecipe = () => {
 
                 <button
                   className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
-                  onClick={() => resertReceipe()}
+                  onClick={async () => await resertReceipe()}
                 >
                   <RotateCcw className="w-4 h-4" />
                   Réinitialiser

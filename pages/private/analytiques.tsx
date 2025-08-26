@@ -1,9 +1,16 @@
 // /pages/private/dashboard.tsx
 // import { getSession, signOut, useSession } from 'next-auth/react';
-import type { NextPageWithLayout } from '@/types';
-import { useRouter } from 'next/router';
-import { Users, BookOpenText, Milk, ArrowUp, BarChart2, LineChart } from 'lucide-react';
-import { ReactNode } from 'react';
+import type { NextPageWithLayout } from "@/types";
+import { useRouter } from "next/router";
+import {
+  Users,
+  BookOpenText,
+  Milk,
+  ArrowUp,
+  BarChart2,
+  LineChart,
+} from "lucide-react";
+import { ReactNode } from "react";
 
 // --- Données Fictives ---
 const statsData = [
@@ -34,13 +41,19 @@ const statsData = [
     value: "4,892",
     change: "+24% ce mois",
     changeColor: "text-green-500",
-  }
+  },
 ];
 
 // --- Composants Locaux ---
 
 // Carte de Statistique
-const StatCard = ({ icon, title, value, change, changeColor }: {
+const StatCard = ({
+  icon,
+  title,
+  value,
+  change,
+  changeColor,
+}: {
   icon: ReactNode;
   title: string;
   value: string;
@@ -48,9 +61,7 @@ const StatCard = ({ icon, title, value, change, changeColor }: {
   changeColor: string;
 }) => (
   <div className="bg-white p-6 rounded-lg shadow-sm flex items-start gap-4">
-    <div className="bg-gray-100 p-3 rounded-full">
-      {icon}
-    </div>
+    <div className="bg-gray-100 p-3 rounded-full">{icon}</div>
     <div>
       <p className="text-sm text-gray-500">{title}</p>
       <p className="text-2xl font-bold text-gray-800 my-1">{value}</p>
@@ -60,7 +71,15 @@ const StatCard = ({ icon, title, value, change, changeColor }: {
 );
 
 // Carte de Graphique (avec un placeholder)
-const ChartCard = ({ title, date, children }: { title: string; date?: string; children: ReactNode }) => (
+const ChartCard = ({
+  title,
+  date,
+  children,
+}: {
+  title: string;
+  date?: string;
+  children: ReactNode;
+}) => (
   <div className="bg-white p-6 rounded-lg shadow-sm">
     <div className="flex justify-between items-center mb-4">
       <div>
@@ -68,9 +87,11 @@ const ChartCard = ({ title, date, children }: { title: string; date?: string; ch
         {date && <p className="text-sm text-gray-400">{date}</p>}
       </div>
       <div className="flex text-sm border border-gray-200 rounded-md">
-        <button className="px-3 py-1 bg-gray-100 rounded-l-md">Jour</button>
-        <button className="px-3 py-1 border-x">Semaine</button>
-        <button className="px-3 py-1">Mois</button>
+        <button className="px-3 py-1 bg-gray-100 rounded-l-md text-gray-400">
+          Jour
+        </button>
+        <button className="px-3 py-1 border-x text-gray-400">Semaine</button>
+        <button className="px-3 py-1 text-gray-400">Mois</button>
       </div>
     </div>
     <div className="h-64 bg-gray-50 flex items-center justify-center rounded-md">
@@ -118,7 +139,7 @@ const Analytiques: NextPageWithLayout = () => {
       </div>
     </div>
   );
-}
+};
 
 Analytiques.isDashboard = true;
 

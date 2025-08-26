@@ -20,10 +20,10 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 text-gray-700" />
           </button>
         </div>
-        <div className="p-4">{children}</div>
+        <div className="p-4 text-gray-700">{children}</div>
       </div>
     </div>
   );

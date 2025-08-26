@@ -1,6 +1,12 @@
 import type { NextPageWithLayout } from "@/types";
 import { useRouter } from "next/router";
-import { Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRecetteStore } from "@/stores/recette.store";
 import { useSession } from "next-auth/react";
@@ -68,17 +74,17 @@ const Recettes: NextPageWithLayout = () => {
           <input
             type="text"
             placeholder="Rechercher une recette..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+          <select className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
             <option>Tous les statuts</option>
             <option>Validé</option>
             <option>Modéré</option>
             <option>Dangereux</option>
           </select>
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+          <select className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
             <option>Trier par</option>
             <option>Date de création</option>
             <option>Nombre d'ingrédients</option>
@@ -115,8 +121,15 @@ const Recettes: NextPageWithLayout = () => {
                   <StatusBadge status={"Validé"} />
                 </td>
                 <td className="p-4">
-                  <button className="text-blue-600 hover:text-blue-800 font-medium transition-colors">
+                  {/* <button className="text-blue-600 hover:text-blue-800 font-medium transition-colors">
                     Voir
+                  </button> */}
+                  <button
+                    // onClick={() => handleViewUser(item)}
+                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                    title="Voir détails"
+                  >
+                    <Eye className="w-5 h-5" />
                   </button>
                 </td>
               </tr>

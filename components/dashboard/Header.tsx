@@ -1,10 +1,15 @@
 import { Bell, Search, UserCircle } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+
 export default function DashboardHeader() {
+  const { data: session } = useSession();
   return (
     <header className="bg-white shadow-sm">
-      <div className="flex items-center justify-between p-4">
-        <h1 className="text-2xl font-bold">Hi, Skylar Dias</h1>
+      <div className="flex items-center justify-between p-4 text-gray-700">
+        <h1 className="text-2xl font-bold">
+          {session?.user.name || "Espace privé"}
+        </h1>
         <div className="flex items-center space-x-28">
           <div className="flex items-center gap-2 w-64 p-1.5 pl-2 rounded bg-gray-200 border-0">
             <Search className="h-5 w-5 text-gray-500" />
@@ -17,10 +22,10 @@ export default function DashboardHeader() {
           </div>
           <div className="flex items-center space-x-4">
             <button className="p-2 rounded-full hover:bg-gray-100">
-              <Bell className="h-5 w-5" />
+              <Bell className="h-5 w-5 text-gray-700" />
             </button>
             <Link href={"/private/profil"}>
-              <UserCircle className="h-8 w-8 rounded-full" />
+              <UserCircle className="h-8 w-8 rounded-full text-gray-700" />
             </Link>
           </div>
         </div>
