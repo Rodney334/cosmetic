@@ -272,13 +272,13 @@ const Register = () => {
                     value={formik.values.genre}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`w-full px-4 py-3 border ${
+                    className={`w-full px-4 py-3 border text-gray-700 ${
                       formik.touched.genre && formik.errors.genre
                         ? "border-red-500"
                         : "border-gray-200"
                     } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none bg-white`}
                   >
-                    <option value="" className="text-gray-700">
+                    <option value="" selected={false}>
                       Genre
                     </option>
                     {genres.map((genre, index) => (
