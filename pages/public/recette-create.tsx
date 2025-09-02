@@ -169,22 +169,42 @@ const NewRecipe = () => {
   };
 
   // Pour retirer un ingrédient à une phase spécifique
-  const removeIngredientFromPhase = (
+  const removeIngredientFromPhase = async (
     phaseId: string,
     ingredient: IngredientType
   ) => {
-    setPhaseData((prev) =>
-      prev.map((phase) =>
-        phase.id === phaseId
-          ? {
-              ...phase,
-              ingredients: phase.ingredients.filter(
-                (ing) => ing._id !== ingredient._id
-              ),
-            }
-          : phase
-      )
-    );
+    try {
+      setPhaseData((prev) =>
+        prev.map((phase) =>
+          phase.id === phaseId
+            ? {
+                ...phase,
+                ingredients: phase.ingredients.filter(
+                  (ing) => ing._id !== ingredient._id
+                ),
+              }
+            : phase
+        )
+      );
+
+      const localRecette = localStorage.getItem("currentRecette");
+      if (localRecette) {
+        const currentRecette = JSON.parse(localRecette);
+        const response = await axios.delete(
+          `${api.base_url}/recipeingredient/recipes/${currentRecette._id}/ingredients/${ingredient._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+          }
+        );
+        console.log({ delete: response.data });
+      }
+    } catch (error: any) {
+      console.log("error :", error.response.data);
+    } finally {
+      CustomSuccessToast("Ingrédient supprimé");
+    }
   };
 
   // const updateIngredientQuantity = (
@@ -384,7 +404,7 @@ const NewRecipe = () => {
           Authorization: `Bearer ${session?.accessToken}`,
         },
       });
-      console.log(response.data);
+      // console.log(response.data);
       localStorage.setItem("currentRecette", JSON.stringify(response.data));
       setHaveLocalStorage(true);
       // addRecipeToPhase(phaseAll, response.data);
@@ -1008,7 +1028,7 @@ const NewRecipe = () => {
                       </div>
                       <div>
                         <span className="font-medium">Poids cible:</span>{" "}
-                        {recipeResult.data.recette.poidsCible}g
+                        {recipeResult.data.recette.poidsCible.toFixed(2)}g
                       </div>
                       <div>
                         <span className="font-medium">Date:</span>{" "}
@@ -1041,6 +1061,9 @@ const NewRecipe = () => {
                               %
                             </th>
                             <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
+                              Millilitres
+                            </th>
+                            <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
                               Grammes
                             </th>
                             <th className="px-4 py-2 border-b text-left text-xs font-medium text-gray-500 uppercase">
@@ -1061,11 +1084,16 @@ const NewRecipe = () => {
                                 {item.ingredient}
                               </td>
                               <td className="px-4 py-2 border-b">
-                                {item.pourcentage}%
+                                {item.pourcentage.toFixed(2)}
                               </td>
-                              <td className="px-4 py-2 border-b">{item.g}g</td>
                               <td className="px-4 py-2 border-b">
-                                {item.gouttes || "-"}
+                                {item.ml.toFixed(2)}
+                              </td>
+                              <td className="px-4 py-2 border-b">
+                                {item.g.toFixed(2)}
+                              </td>
+                              <td className="px-4 py-2 border-b">
+                                {item.gouttes?.toFixed(2) || "-"}
                               </td>
                             </tr>
                           ))}
@@ -1089,15 +1117,15 @@ const NewRecipe = () => {
                       </div>
                       <div>
                         <span className="font-medium">Masse totale:</span>{" "}
-                        {recipeResult.data.totaux.masseTotale}g
+                        {recipeResult.data.totaux.masseTotale.toFixed(2)}g
                       </div>
                       <div>
                         <span className="font-medium">Volume total:</span>{" "}
-                        {recipeResult.data.totaux.volumeTotal}
+                        {recipeResult.data.totaux.volumeTotal.toFixed(2)}
                       </div>
                       <div>
                         <span className="font-medium">Écart poids:</span>{" "}
-                        {recipeResult.data.totaux.ecartPoids}g
+                        {recipeResult.data.totaux.ecartPoids.toFixed(2)}g
                       </div>
                     </div>
                   </div>
@@ -1139,10 +1167,6 @@ const NewRecipe = () => {
             </div> */}
         {/* Action Buttons */}
         <div className="text-gray-700 mt-6 flex gap-3">
-          <button className="bg-[#4B352A] text-white px-6 py-2 rounded hover:bg-[#3e2b22] flex items-center gap-2 cursor-pointer">
-            <Save className="w-4 h-4" />
-            Sauvegarder
-          </button>
           <button className="border border-gray-300 px-6 py-2 rounded hover:bg-gray-50 flex items-center gap-2 cursor-pointer">
             <Copy className="w-4 h-4" />
             Dupliquer

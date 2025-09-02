@@ -34,6 +34,7 @@ export type RecipeResult = {
       type: string;
       ingredient: string;
       pourcentage: number;
+      ml: number;
       g: number;
       gouttes?: number; // optionnel car certains ingrédients n'ont pas de gouttes
       prix: number;

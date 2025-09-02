@@ -100,7 +100,7 @@ const QSPSelect = ({ ingredients, onSelect, resetTrigger }: QSPSelectProps) => {
               <input
                 type="text"
                 placeholder="Rechercher un ingrédient..."
-                className="w-full p-2 border border-gray-300 rounded"
+                className="w-full p-2 border text-gray-700 border-gray-300 rounded"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 autoFocus
