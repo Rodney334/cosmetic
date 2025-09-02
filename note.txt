@@ -1,0 +1,9 @@
+Problème 
+- input de type number à changer en texte -- done
+- les qsp, liste de tous les ingrédients avec la possibilité de faire une recherche.
+
+
+
+- le calcul ne doit pas se faire tant qu'il y a des ingrédients qui compose la recette et dont les quantités sont zéro
+- au niveau des phases pouvoir faire une recheche
+- revenir au système où je gardais en mémoire les 

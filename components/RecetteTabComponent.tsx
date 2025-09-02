@@ -1,7 +1,7 @@
 import { IngredientType } from "@/types/ingredient.type";
 import { PhaseType } from "@/types/phase.type";
 import { PhaseData } from "@/types/recipe.type";
-import { Trash2 } from "lucide-react";
+import { CircleQuestionMark, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 type RecetteTabType = {
@@ -14,7 +14,7 @@ type RecetteTabType = {
   updateIngredientQuantity: (
     phaseId: string,
     ingredientId: string,
-    newQuantity: number
+    newQuantity: string
   ) => void;
 };
 
@@ -74,21 +74,21 @@ export const RecetteTab = ({
                     key={ingredient._id}
                     className="bg-white hover:bg-gray-50"
                   >
-                    <td className="p-2 border-r border-gray-300 border-b min-w-[150px]">
+                    <td className="p-2 border border-gray-300 min-w-[150px]">
                       <input
                         type="text"
                         value={ingredient.nom}
-                        className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+                        className="w-full text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
                         placeholder="-"
                         disabled={true}
                       />
                     </td>
-                    <td className="p-2 border-r border-gray-300 border-b flex justify-center items-center min-w-[100px]">
-                      <span className="inline-block bg-green-100 px-2 py-1 rounded text-xs font-medium text-green-800 min-w-6 text-center">
+                    <td className="p-2 border-b border-gray-300 flex justify-center items-center min-w-[100px]">
+                      <span className="bg-green-100 rounded text-xs font-medium text-green-800 min-w-6 text-center">
                         {item.id === "0" ? QSPphase?.nom : item.title}
                       </span>
                     </td>
-                    <td className="p-2 border-r border-b border-gray-300 min-w-[120px]">
+                    <td className="p-2 border border-gray-300 min-w-[120px]">
                       <input
                         type="text"
                         disabled={true}
@@ -97,30 +97,46 @@ export const RecetteTab = ({
                         placeholder="famille"
                       />
                     </td>
-                    <td className="p-2 border-r border-gray-300 border-b min-w-[80px]">
+                    <td
+                      className={`relative p-2 border border-gray-300 min-w-[80px]`}
+                    >
                       <input
-                        type="number"
-                        step="0.01"
-                        value={ingredient.quantite || 0}
+                        type="text"
+                        value={ingredient.quantite || ""}
                         onChange={(e) => {
-                          let value: number;
-                          if (!parseFloat(e.target.value)) {
-                            value = 0;
+                          let value = e.target.value;
+                          if (/^[0-9]*[,.]?[0-9]*$/.test(value)) {
+                            const checkdecimal = [...value].filter(
+                              (char) => char === "."
+                            ).length;
+                            if (checkdecimal <= 1) {
+                              updateIngredientQuantity(
+                                item.id,
+                                ingredient._id,
+                                value
+                              );
+                            }
                           } else {
-                            value = parseFloat(e.target.value);
+                            value = "";
+                            updateIngredientQuantity(
+                              item.id,
+                              ingredient._id,
+                              value
+                            );
                           }
-                          updateIngredientQuantity(
-                            item.id,
-                            ingredient._id,
-                            value
-                          );
                         }}
                         className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center"
                         placeholder="-"
                         disabled={item.id === "0"}
-                        min={0}
-                        max={100}
                       />
+                      <button
+                        className={`absolute top-1 right-1`}
+                        title={`Dosage recommandé : ${ingredient.dosageRecommande}`}
+                      >
+                        <CircleQuestionMark
+                          className={`w-4 h-4 rounded font-medium text-amber-500 text-center`}
+                        />
+                      </button>
                     </td>
                     <td className="p-2 border-r border-b border-gray-300 min-w-[100px]">
                       <input
@@ -228,27 +244,33 @@ export const RecetteTab = ({
                     <div>
                       <span className="text-gray-500">%: </span>
                       <input
-                        type="number"
-                        step="0.01"
-                        value={ingredient.quantite || 0}
+                        type="text"
+                        value={ingredient.quantite || ""}
                         onChange={(e) => {
-                          let value: number;
-                          if (!parseFloat(e.target.value)) {
-                            value = 0;
+                          let value = e.target.value;
+                          if (/^[0-9]*[,.]?[0-9]*$/.test(value)) {
+                            const checkdecimal = [...value].filter(
+                              (char) => char === "."
+                            ).length;
+                            if (checkdecimal <= 1) {
+                              updateIngredientQuantity(
+                                item.id,
+                                ingredient._id,
+                                value
+                              );
+                            }
                           } else {
-                            value = parseFloat(e.target.value);
+                            value = "";
+                            updateIngredientQuantity(
+                              item.id,
+                              ingredient._id,
+                              value
+                            );
                           }
-                          updateIngredientQuantity(
-                            item.id,
-                            ingredient._id,
-                            value
-                          );
                         }}
                         className="w-16 p-1 text-sm border border-gray-300 rounded text-center"
                         placeholder="-"
                         disabled={item.id === "0"}
-                        min={0}
-                        max={100}
                       />
                     </div>
 

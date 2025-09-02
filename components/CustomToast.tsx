@@ -1,12 +1,12 @@
 import toast from "react-hot-toast";
 
-export const CustomSuccessToast = (text: string) => {
+export const CustomSuccessToast = (text: string, duration?: number) => {
   return toast.success(
     <div>
       <h3 className="font-bold">{text}</h3>
     </div>,
     {
-      duration: 1500,
+      duration: duration || 2000,
       position: "top-center",
       style: {
         backgroundColor: "#4BB543",
@@ -23,13 +23,13 @@ export const CustomSuccessToast = (text: string) => {
   );
 };
 
-export const CustomErrorToast = (text: string) => {
+export const CustomErrorToast = (text: string, duration?: number) => {
   return toast.error(
     <div>
       <h3 className="font-bold">{text}</h3>
     </div>,
     {
-      duration: 5000,
+      duration: duration || 3000,
       position: "top-center",
       style: {
         backgroundColor: "#DA3030",

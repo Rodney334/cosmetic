@@ -7,8 +7,10 @@
 // };
 
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { checkIfTokenIsValid, SessionExpire } from "./utils/axios";
+import { signOut } from "next-auth/react";
 
 // Paths that require admin authentication
 const protectedRoutes = ["/private"];
@@ -18,6 +20,28 @@ export async function middleware(req: NextRequest) {
     req,
     secret: process.env.NEXTAUTH_SECRET || "Secrete key 1234567890",
   });
+  console.log({ token: token?.accessToken });
+
+  const isAvalableToken: SessionExpire = await checkIfTokenIsValid(
+    token?.accessToken
+  );
+  console.log({ isAvalableToken });
+  if (!req.nextUrl.pathname.endsWith("login")) {
+    if (isAvalableToken === SessionExpire.EXPIRE) {
+      const loginUrl = new URL("/public/login", req.url);
+      // Supprimer le cookie d'authentification côté serveur
+
+      // Au lieu d'appeler signOut() qui nécessite window,
+      // et on peut éventuellement supprimer le cookie côté serveur
+      const response = NextResponse.redirect(loginUrl);
+      response.cookies.set("next-auth.session-token", "", {
+        maxAge: -1,
+        path: "/",
+      });
+
+      return response;
+    }
+  }
 
   // Check if the path is protected
   const isProtected = protectedRoutes.some((path) =>
@@ -37,5 +61,5 @@ export async function middleware(req: NextRequest) {
 
 // Only run middleware on these routes
 export const config = {
-  matcher: ["/private/:path*"],
+  matcher: ["/private/:path*", "/public/:path*"],
 };

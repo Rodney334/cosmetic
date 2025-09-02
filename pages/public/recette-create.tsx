@@ -1,14 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Plus,
   Calculator,
   Save,
   Copy,
   FileText,
   FileSpreadsheet,
-  BookOpen,
-  CircleCheck,
-  Trash2,
   Camera,
   RotateCcw,
   RefreshCw,
@@ -19,21 +15,19 @@ import { usePhaseStore } from "@/stores/phase.store";
 import { RecetteTab } from "@/components/RecetteTabComponent";
 import { PhaseData, RecipeResult, RecipeType } from "@/types/recipe.type";
 import { PhaseType } from "@/types/phase.type";
-import {
-  IngredientByCategorieType,
-  IngredientType,
-} from "@/types/ingredient.type";
+import { IngredientType } from "@/types/ingredient.type";
 import { PhaseTab } from "@/components/PhaseTabComponent";
 import { CustomErrorToast, CustomSuccessToast } from "@/components/CustomToast";
 import axios from "axios";
 import { api } from "@/constantes/api.constante";
-import { Toaster } from "react-hot-toast";
+import QSPSelect from "@/components/QSPSelect";
 
 const NewRecipe = () => {
   const { data: session } = useSession();
   const {
     ingredientsByCategory,
     ingredientQSP,
+    ingredientAll,
     getAllIngredient,
     groupIngredientsByCategory,
   } = useIngredientStore();
@@ -51,7 +45,7 @@ const NewRecipe = () => {
 
   const [recipeName, setRecipeName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [totalQuantity, setTotalQuantity] = useState<number>(100);
+  const [totalQuantity, setTotalQuantity] = useState<string>("");
   const [unit, setUnit] = useState<string>("g");
   // const [qsp100, setQsp100] = useState<string>("Eau déminéralisée");
   const [hotRecipe, setHotRecipe] = useState<boolean>(false);
@@ -59,33 +53,60 @@ const NewRecipe = () => {
   const [searchIngredient, setSearchIngredient] = useState<string>("");
 
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [haveLocalStorage, setHaveLocalStorage] = useState<boolean>(false);
   const [haveQSP, setHaveQSP] = useState<boolean>(false);
+  const [resetQSP, setResetQSP] = useState<boolean>(false);
   const [switcher, setSwitcher] = useState<boolean>(false);
 
   useEffect(() => {
     const localRecette = localStorage.getItem("currentRecette");
-    if (localRecette) {
+    const localResult = localStorage.getItem("currentResult");
+    const localPhaseData = localStorage.getItem("phaseData");
+    const localQSP = localStorage.getItem("currentQSP");
+    if (localRecette && localResult && localPhaseData && localQSP) {
       setHaveLocalStorage(true);
+    } else {
+      setHaveLocalStorage(false);
     }
   }, []);
 
   useEffect(() => {
     const localRecette = localStorage.getItem("currentRecette");
-    if (haveLocalStorage && localRecette) {
-      const data: RecipeType = JSON.parse(localRecette);
+    const localResult = localStorage.getItem("currentResult");
+    const localPhaseData = localStorage.getItem("phaseData");
+    const localQSP = localStorage.getItem("currentQSP");
+    if (
+      haveLocalStorage &&
+      localRecette &&
+      localResult &&
+      localPhaseData &&
+      localQSP
+    ) {
+      const data: RecipeType = JSON.parse(localRecette!) || undefined;
+      const phase_data: PhaseData[] = JSON.parse(localPhaseData!) || [];
+      const result_data: RecipeResult = JSON.parse(localResult!) || undefined;
+      const QSP_data: PhaseType = JSON.parse(localQSP!) || undefined;
       setRecipeName(data.nom);
       setDescription(data.description);
-      setTotalQuantity(data.poidsTotal);
-    } else {
-      setRecipeName("");
-      setDescription("");
-      setTotalQuantity(0);
-      setRecipeResult(undefined);
-      localStorage.removeItem("currentRecette");
+      setTotalQuantity(data.poidsTotal.toString());
+      setPhaseData(phase_data);
+      setQSPphase(QSP_data);
+      setHaveQSP(true);
+      setRecipeResult(result_data);
     }
-  }, [haveLocalStorage]);
+    // else {
+    //   setRecipeName("");
+    //   setDescription("");
+    //   setTotalQuantity("");
+    //   setPhaseData([]);
+    //   setQSPphase(undefined);
+    //   setHaveQSP(false);
+    //   setRecipeResult(undefined);
+    // localStorage.removeItem("currentRecette");
+    // }
+  }, [haveLocalStorage, phaseAll]);
 
   useEffect(() => {
     if (session && session.accessToken) {
@@ -116,26 +137,6 @@ const NewRecipe = () => {
       setPhaseData(initialPhaseData);
     }
   }, [phaseAll]);
-
-  // const updateIngredient = (
-  //   phaseIndex: number,
-  //   ingredientId: number,
-  //   field: keyof Ingredient,
-  //   value: string
-  // ): void => {
-  //   setPhaseData((prev) =>
-  //     prev.map((phase, pIndex) =>
-  //       pIndex === phaseIndex
-  //         ? {
-  //             ...phase,
-  //             ingredients: phase.ingredients.map((ing) =>
-  //               ing.id === ingredientId ? { ...ing, [field]: value } : ing
-  //             ),
-  //           }
-  //         : phase
-  //     )
-  //   );
-  // };
 
   // Pour ajouter un ingrédient à une phase spécifique
   const addIngredientToPhase = async (
@@ -186,14 +187,94 @@ const NewRecipe = () => {
     );
   };
 
+  // const updateIngredientQuantity = (
+  //   phaseId: string,
+  //   ingredientId: string,
+  //   newQuantity: number
+  // ) => {
+  //   console.log({ newQuantity });
+  //   setPhaseData((prevPhases) => {
+  //     // Fonction helper pour limiter à 2 décimales
+  //     const toTwoDecimals = (num: number) => parseFloat(num.toFixed(2));
+
+  //     // 1. Validation initiale
+  //     if (phaseId === "0") return prevPhases;
+
+  //     const qspPhase = prevPhases.find((phase) => phase.id === "0");
+  //     if (!qspPhase?.ingredients.length) return prevPhases;
+  //     const [qspIngredient] = qspPhase.ingredients;
+
+  //     // 2. Trouver l'ingrédient cible
+  //     const targetPhase = prevPhases.find((phase) => phase.id === phaseId);
+  //     const targetIngredient = targetPhase?.ingredients.find(
+  //       (ing) => ing._id === ingredientId
+  //     );
+  //     if (!targetIngredient) return prevPhases;
+
+  //     // Formatage de l'ancienne quantité
+  //     const oldQuantity = toTwoDecimals(targetIngredient.quantite || 0);
+
+  //     // 3. Cas spécial : remise à zéro (backspace)
+  //     const isResetToZero = newQuantity === 0 && oldQuantity > 0;
+
+  //     // 4. Calcul des nouvelles valeurs (avec formatage)
+  //     let newQspQuantity = toTwoDecimals(qspIngredient.quantite);
+  //     let finalQuantity = toTwoDecimals(
+  //       Math.max(0, Math.min(newQuantity, 100))
+  //     );
+
+  //     if (isResetToZero) {
+  //       // Cas spécial : on remet toute la quantité dans QSP
+  //       newQspQuantity = toTwoDecimals(
+  //         Math.min(100, qspIngredient.quantite + oldQuantity)
+  //       );
+  //       finalQuantity = 0;
+  //     } else {
+  //       // Cas normal
+  //       const quantityDiff = toTwoDecimals(finalQuantity - oldQuantity);
+  //       newQspQuantity = toTwoDecimals(qspIngredient.quantite - quantityDiff);
+  //     }
+
+  //     // 5. Validation des limites
+  //     if (newQspQuantity < 0 || newQspQuantity > 100) {
+  //       return prevPhases;
+  //     }
+
+  //     // 6. Mise à jour
+  //     return prevPhases.map((phase) => {
+  //       if (phase.id === phaseId) {
+  //         const updatedIngredients = phase.ingredients.map((ingredient) => {
+  //           return ingredient._id === ingredientId
+  //             ? { ...ingredient, quantite: finalQuantity }
+  //             : ingredient;
+  //         });
+
+  //         return { ...phase, ingredients: updatedIngredients };
+  //       }
+
+  //       if (phase.id === "0") {
+  //         return {
+  //           ...phase,
+  //           ingredients: [{ ...qspIngredient, quantite: newQspQuantity }],
+  //         };
+  //       }
+
+  //       return phase;
+  //     });
+  //   });
+  // };
+
   const updateIngredientQuantity = (
     phaseId: string,
     ingredientId: string,
-    newQuantity: number
+    newQuantity: string // Changé de number à string
   ) => {
+    console.log({ newQuantity });
     setPhaseData((prevPhases) => {
       // Fonction helper pour limiter à 2 décimales
       const toTwoDecimals = (num: number) => parseFloat(num.toFixed(2));
+
+      if (Number(newQuantity) > 100) return prevPhases;
 
       // 1. Validation initiale
       if (phaseId === "0") return prevPhases;
@@ -202,7 +283,14 @@ const NewRecipe = () => {
       if (!qspPhase?.ingredients.length) return prevPhases;
       const [qspIngredient] = qspPhase.ingredients;
 
-      // 2. Trouver l'ingrédient cible
+      // 2. Convertir la string en nombre
+      // const numericQuantity = parseFloat(newQuantity.replace(",", "."));
+      const numericQuantity = newQuantity;
+      if (!/^[0-9]*[,.]?[0-9]*$/.test(numericQuantity)) {
+        return prevPhases; // Si la conversion échoue
+      }
+
+      // 3. Trouver l'ingrédient cible
       const targetPhase = prevPhases.find((phase) => phase.id === phaseId);
       const targetIngredient = targetPhase?.ingredients.find(
         (ing) => ing._id === ingredientId
@@ -210,30 +298,22 @@ const NewRecipe = () => {
       if (!targetIngredient) return prevPhases;
 
       // Formatage de l'ancienne quantité
-      const oldQuantity = toTwoDecimals(targetIngredient.quantite || 0);
-
-      // 3. Cas spécial : remise à zéro (backspace)
-      const isResetToZero = newQuantity === 0 && oldQuantity > 0;
+      // const oldQuantity = toTwoDecimals(targetIngredient.quantite || 0);
+      const oldQuantity = targetIngredient.quantite || 0;
 
       // 4. Calcul des nouvelles valeurs (avec formatage)
-      let newQspQuantity = toTwoDecimals(qspIngredient.quantite);
-      let finalQuantity = toTwoDecimals(
-        Math.max(0, Math.min(newQuantity, 100))
-      );
+      // let newQspQuantity = toTwoDecimals(qspIngredient.quantite);
+      // const finalQuantity = toTwoDecimals(numericQuantity);
+      let newQspQuantity = qspIngredient.quantite;
+      const finalQuantity = newQuantity;
 
-      if (isResetToZero) {
-        // Cas spécial : on remet toute la quantité dans QSP
-        newQspQuantity = toTwoDecimals(
-          Math.min(100, qspIngredient.quantite + oldQuantity)
-        );
-        finalQuantity = 0;
-      } else {
-        // Cas normal
-        const quantityDiff = toTwoDecimals(finalQuantity - oldQuantity);
-        newQspQuantity = toTwoDecimals(qspIngredient.quantite - quantityDiff);
-      }
+      // Cas normal
+      // const quantityDiff = toTwoDecimals(finalQuantity - oldQuantity);
+      // newQspQuantity = toTwoDecimals(qspIngredient.quantite - quantityDiff);
+      const quantityDiff = toTwoDecimals(Number(finalQuantity) - oldQuantity);
+      newQspQuantity = toTwoDecimals(qspIngredient.quantite - quantityDiff);
 
-      // 5. Validation des limites
+      // 5. Validation des limites (seulement pour QSP)
       if (newQspQuantity < 0 || newQspQuantity > 100) {
         return prevPhases;
       }
@@ -287,7 +367,7 @@ const NewRecipe = () => {
   const createRecipe = async () => {
     try {
       setIsCreating(true);
-      if (!recipeName || !description || totalQuantity === 0) {
+      if (!recipeName || !description || !totalQuantity) {
         CustomErrorToast(
           "Tous les champs sont obligatoires et la quantité totale ne peut pas être zéro."
         );
@@ -296,7 +376,7 @@ const NewRecipe = () => {
       const data = {
         nom: recipeName,
         description: description,
-        poidsTotal: totalQuantity,
+        poidsTotal: Number(totalQuantity),
       };
       console.log(data);
       const response = await axios.post(`${api.base_url}/recipe`, data, {
@@ -307,7 +387,7 @@ const NewRecipe = () => {
       console.log(response.data);
       localStorage.setItem("currentRecette", JSON.stringify(response.data));
       setHaveLocalStorage(true);
-      addRecipeToPhase(phaseAll, response.data);
+      // addRecipeToPhase(phaseAll, response.data);
       CustomSuccessToast("Enregistré");
     } catch (error) {
       CustomErrorToast("La création de la récette a échoué.");
@@ -315,6 +395,54 @@ const NewRecipe = () => {
       setIsCreating(false);
     }
   };
+
+  const checkValideIngredientForRecipeData = (
+    phaseData: PhaseData[]
+  ): boolean => {
+    try {
+      if (!phaseData || phaseData.length === 0) {
+        // console.warn("Aucune phase trouvée pour la recette");
+        return false;
+      }
+
+      const phaseEmpty = phaseData.filter((item) => {
+        if (item.ingredients.length === 0) {
+          return item;
+        }
+      });
+      // console.log({ empty: phaseEmpty.length });
+
+      if (phaseEmpty.length >= phaseData.length - 1) {
+        return false;
+      }
+
+      const checkResponseList = phaseData.map((item) => {
+        // vérifier si des ingrédients ont des quantités <= 0
+        return item.ingredients.find((ingredient) => {
+          // console.log({ ingredient });
+          return ingredient.quantite <= 0 || !ingredient.quantite;
+        });
+      });
+      // console.log({ checkResponseList });
+
+      let count: number = 0;
+      checkResponseList.map((el) => {
+        if (el) {
+          count += 1;
+        }
+      });
+      // console.log({ count });
+      if (count > 0) {
+        // console.log("false");
+        return false;
+      }
+      return true;
+    } catch (error: any) {
+      // console.log("check ingredient list validation error :", error);
+      return false;
+    }
+  };
+  // console.log(isCalculating || !checkValideIngredientForRecipeData(phaseData));
 
   const saveIngredientForRecipe = async (recipeId: string) => {
     try {
@@ -328,13 +456,14 @@ const NewRecipe = () => {
             quantite: ingredient.quantite,
             unite: "%",
           };
-          await axios.post(`${api.base_url}/recipeingredient/`, data, {
+          await axios.post(`${api.base_url}/recipeingredient/upsert`, data, {
             headers: {
               Authorization: `Bearer ${session?.accessToken}`,
             },
           });
         });
       });
+      localStorage.setItem("phaseData", JSON.stringify(phaseData));
     } catch (error: any) {
       console.log("save ingredient error :", error.response.data);
     }
@@ -343,7 +472,7 @@ const NewRecipe = () => {
   const finalResult = async (recipeId: string) => {
     try {
       const response = await axios.get(
-        `${api.base_url}/recipe/${recipeId}/finalresult`,
+        `${api.base_url}/recipe/${recipeId}/calculer`,
         {
           headers: {
             Authorization: `Bearer ${session?.accessToken}`,
@@ -352,7 +481,9 @@ const NewRecipe = () => {
       );
       console.log({ response: response.data });
       setRecipeResult(response.data);
+      setSwitcher(true);
       CustomSuccessToast("Calcul effectué.");
+      localStorage.setItem("currentResult", JSON.stringify(response.data));
     } catch (error: any) {
       console.log("finale result error :", error.response.data);
       CustomErrorToast("Echec du calcul.");
@@ -361,34 +492,70 @@ const NewRecipe = () => {
 
   const handleCalculate = async () => {
     try {
+      if (checkValideIngredientForRecipeData(phaseData) == false) {
+        CustomErrorToast("Les quantités des ingrédients ne peut être nulles");
+        return;
+      }
       setIsCalculating(true);
       const localRecette = localStorage.getItem("currentRecette");
       if (localRecette) {
         const recipe = JSON.parse(localRecette);
         await saveIngredientForRecipe(recipe._id);
         await finalResult(recipe._id);
-        localStorage.removeItem("currentRecette");
       } else {
         CustomErrorToast("Valider d'abord votre recette");
         return;
       }
-      console.log("try to calculate");
-    } catch (error) {
-      console.log("error: ", error);
+    } catch (error: any) {
+      console.log("error: ", error.response);
     } finally {
       setIsCalculating(false);
+    }
+  };
+
+  const handleSaveResult = async () => {
+    try {
+      console.log("saving");
+      setIsSaving(true);
+      const localRecette = localStorage.getItem("currentRecette");
+      if (localRecette) {
+        const recipe: RecipeType = JSON.parse(localRecette);
+        const response = await axios.post(
+          `${api.base_url}/recipe/${recipe._id}/savefinalresult`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+          }
+        );
+        console.log({ response: response.data });
+        CustomSuccessToast("Résultat sauvegardé");
+      } else {
+        CustomErrorToast("Erreur de la sauvegarde.");
+      }
+    } catch (error: any) {
+      console.log("finale result error :", error.response.data);
+      CustomErrorToast("Echec de la sauvegarde.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const resertReceipe = async () => {
     console.log("resert");
     localStorage.removeItem("currentRecette");
+    localStorage.removeItem("currentResult");
+    localStorage.removeItem("phaseData");
+    localStorage.removeItem("currentQSP");
+    setHaveLocalStorage(false);
     setRecipeName("");
     setDescription("");
-    setTotalQuantity(0);
-    setRecipeResult(undefined);
-    setHaveLocalStorage(false);
+    setTotalQuantity("");
+    setPhaseData([]);
+    setQSPphase(undefined);
     setHaveQSP(false);
+    setRecipeResult(undefined);
     await resertReceipePhase();
     CustomSuccessToast("Recette réinitialisée");
   };
@@ -417,7 +584,8 @@ const NewRecipe = () => {
   //   );
   // };
 
-  const calculatedTotal: number = totalQuantity * (unit === "g" ? 1 : 1);
+  const calculatedTotal: number =
+    Number(totalQuantity)! * (unit === "g" ? 1 : 1);
 
   return (
     <div
@@ -506,13 +674,31 @@ const NewRecipe = () => {
                   </label>
                   <div className="flex items-center gap-2">
                     <input
-                      type="number"
-                      value={totalQuantity}
-                      onChange={(e) =>
-                        setTotalQuantity(parseInt(e.target.value) || 0)
+                      type="text"
+                      value={
+                        /^[0-9]*[,.]?[0-9]*$/.test(totalQuantity.toString())
+                          ? totalQuantity
+                          : ""
                       }
+                      placeholder="Saisissez"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^[0-9]*[,.]?[0-9]*$/.test(value)) {
+                          const checkdecimal = [...value].filter(
+                            (char) => char === "."
+                          ).length;
+                          if (checkdecimal <= 1) {
+                            setTotalQuantity(value);
+                          }
+                        } else {
+                          CustomErrorToast(
+                            "Seul les chiffres sont utilisés. Valeur réinitialisée.",
+                            5000
+                          );
+                          setTotalQuantity("");
+                        }
+                      }}
                       className="w-20 p-2 text-gray-700 border border-gray-300 rounded text-center focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none"
-                      min="0"
                       required
                     />
                     <select
@@ -539,7 +725,7 @@ const NewRecipe = () => {
             </div>
 
             {/* Bouton de validation */}
-            <div className="flex justify-end">
+            <div className="flex justify-start">
               <button
                 className={`${
                   isCreating ? "animate-pulse opacity-75" : "hover:bg-[#3e2b22]"
@@ -549,7 +735,7 @@ const NewRecipe = () => {
                   isCreating ||
                   !recipeName.trim() ||
                   !description.trim() ||
-                  totalQuantity <= 0
+                  !totalQuantity.trim()
                 }
               >
                 {isCreating ? (
@@ -565,6 +751,7 @@ const NewRecipe = () => {
           </div>
         )}
 
+        {/* Resume of recipe data */}
         {haveLocalStorage && (
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center gap-4 mb-4">
@@ -611,45 +798,26 @@ const NewRecipe = () => {
           <div
             className={`my-2 bg-white p-2 rounded-lg shadow-sm border border-gray-200`}
           >
-            {/* QSP */}
+            {/* QSP and temperature */}
             <div className="mb-6 flex items-center gap-6">
-              <div className="flex items-center gap-2 text-gray-700">
-                <label className="font-medium">QSP 100% :</label>
-                <select
-                  // value={qsp100}
-                  onChange={async (e) => {
-                    // setQsp100(e.target.value);
-                    await resertReceipePhase();
-                    const data: IngredientType = JSON.parse(e.target.value);
-                    // console.log({ data });
-                    const phase = phaseAll.find((el) => {
-                      // console.log({ el, category: data.categorie });
-                      return el.allowedCategories.find(
-                        (el) => el._id === data.categorie._id
-                      );
-                    });
-                    if (!phase) return;
-                    console.log("here");
-                    setQSPphase(phase);
-                    setHaveQSP(true);
-                    await addIngredientToPhase("0", data);
-                  }}
-                  className="text-gray-700 p-2 border border-gray-300 rounded"
-                >
-                  <option value="" selected={false}>
-                    Selectionnez un QSP
-                  </option>
-                  {ingredientQSP.map((ingredient, index) => (
-                    <option
-                      key={ingredient._id + index}
-                      value={JSON.stringify(ingredient)}
-                      className="text-gray-700"
-                    >
-                      {ingredient.nom}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <QSPSelect
+                ingredients={ingredientAll}
+                onSelect={async (data) => {
+                  await resertReceipePhase();
+                  const phase = phaseAll.find((el) => {
+                    return el.allowedCategories.find(
+                      (el) => el._id === data.categorie._id
+                    );
+                  });
+                  if (!phase) return;
+                  console.log({ phase });
+                  setQSPphase(phase);
+                  setHaveQSP(true);
+                  localStorage.setItem("currentQSP", JSON.stringify(phase));
+                  await addIngredientToPhase("0", data);
+                }}
+                resetTrigger={resetQSP} // passez une prop qui change quand vous voulez reset
+              />
 
               <div className="flex items-center gap-4 text-gray-700">
                 <label className="font-medium">Recette à chaud :</label>
@@ -709,18 +877,22 @@ const NewRecipe = () => {
                 />
               </div> */}
               <div className={`w-full flex justify-start gap-2`}>
-                {!recipeResult && (
-                  <button
-                    className={`${
-                      isCalculating ? "animate-pulse" : ""
-                    } bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer`}
-                    onClick={() => handleCalculate()}
-                    disabled={isCalculating}
-                  >
-                    <Calculator className="w-4 h-4" />
-                    {isCalculating ? "Patientez..." : "Calculer"}
-                  </button>
-                )}
+                <button
+                  className={`${isCalculating ? "animate-pulse" : ""} ${
+                    (isCalculating ||
+                      !checkValideIngredientForRecipeData(phaseData)) === true
+                      ? "cursor-not-allowed"
+                      : "cursor-pointer"
+                  } bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2`}
+                  onClick={() => handleCalculate()}
+                  disabled={
+                    isCalculating ||
+                    !checkValideIngredientForRecipeData(phaseData)
+                  }
+                >
+                  <Calculator className="w-4 h-4" />
+                  {isCalculating ? "Patientez..." : "Calculer"}
+                </button>
 
                 <button
                   className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
@@ -729,11 +901,24 @@ const NewRecipe = () => {
                   <RotateCcw className="w-4 h-4" />
                   Réinitialiser
                 </button>
+
+                {recipeResult && (
+                  <button
+                    className={`${
+                      isSaving && "animate-pulse"
+                    } bg-[#4B352A] text-white px-6 py-2 rounded hover:bg-[#3e2b22] flex items-center gap-2 cursor-pointer`}
+                    onClick={() => handleSaveResult()}
+                    disabled={isSaving}
+                  >
+                    <Save className="w-4 h-4" />
+                    {isSaving ? "Patientez..." : "Sauvegarder"}
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Switch btn */}
-            {/* {recipeResult && (
+            {recipeResult && (
               <button
                 className="bg-[#4B352A] text-white px-4 py-2 mb-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
                 onClick={() => {
@@ -743,10 +928,10 @@ const NewRecipe = () => {
                 <RefreshCw className="w-4 h-4" />
                 {switcher ? "Retourner à la préparation" : "Voir le résultat"}
               </button>
-            )} */}
+            )}
 
             {/* Préparation, Phase list */}
-            {!recipeResult && (
+            {(!recipeResult || !switcher) && (
               <div className="mb-4 flex gap-2">
                 <button
                   onClick={() => {
@@ -784,7 +969,7 @@ const NewRecipe = () => {
             )}
 
             {/* Recette tab */}
-            {!currentPhase && !recipeResult && (
+            {!currentPhase && !switcher && (
               <RecetteTab
                 QSPphase={QSPphase}
                 phaseData={phaseData}
@@ -794,7 +979,7 @@ const NewRecipe = () => {
             )}
 
             {/* Phase tab */}
-            {currentPhase && (
+            {currentPhase && !switcher && (
               <PhaseTab
                 phaseData={phaseData}
                 ingredientsByCategory={ingredientsByCategory}
@@ -808,8 +993,8 @@ const NewRecipe = () => {
             )}
 
             {/* Résultat finale de la préparation */}
-            <div className="text-gray-700 mt-4 p-4 bg-white border border-gray-200 rounded-lg">
-              {recipeResult && (
+            {recipeResult && switcher && (
+              <div className="text-gray-700 mt-4 p-4 bg-white border border-gray-200 rounded-lg">
                 <div className="space-y-6">
                   {/* En-tête de la recette */}
                   <div className="bg-blue-50 p-3 rounded border border-blue-100">
@@ -819,7 +1004,7 @@ const NewRecipe = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                       <div>
                         <span className="font-medium">Nom:</span>{" "}
-                        {recipeResult.data.recette.nom}
+                        {recipeResult.data.recette?.nom}
                       </div>
                       <div>
                         <span className="font-medium">Poids cible:</span>{" "}
@@ -940,8 +1125,8 @@ const NewRecipe = () => {
                     </span>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 

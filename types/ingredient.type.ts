@@ -22,7 +22,7 @@ export type IngredientType = {
   solubilite: string;
   remarques: string;
   devise: string;
-  quantite: number;
+  quantite: any;
   __v: number;
   createdAt: string;
   updatedAt: string;

@@ -51,7 +51,7 @@ const HomePage = () => {
             <div className="bg-black h-4 w-full"></div>
 
             {/* Contenu vidéo */}
-            <div className="relative bg-black aspect-video">
+            {/* <div className="relative bg-black aspect-video">
               <iframe
                 className="w-full h-full"
                 src="https://www.youtube.com/embed/Amug-gIV7ng"
@@ -59,7 +59,7 @@ const HomePage = () => {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               ></iframe>
-            </div>
+            </div> */}
 
             {/* Bande noire bottom */}
             <div className="bg-black h-4 w-full"></div>
