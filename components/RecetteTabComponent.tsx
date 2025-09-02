@@ -46,8 +46,19 @@ export const RecetteTab = ({
                 <th className="p-3 text-center font-medium border-r border-gray-300 min-w-[80px]">
                   %
                 </th>
-                <th className="p-3 text-center font-medium border-r border-gray-300 min-w-[100px]">
-                  Coûts (€)
+                <th className="flex gap-1 p-3 text-center font-medium border-r border-gray-300 min-w-[150px]">
+                  Coûts :
+                  <select name="">
+                    <option value="XOF" className="text-gray-600">
+                      XOF
+                    </option>
+                    <option value="$" className="text-gray-600">
+                      $
+                    </option>
+                    <option value="€" className="text-gray-600">
+                      €
+                    </option>
+                  </select>
                 </th>
                 <th className="p-3 text-center font-medium min-w-[100px]">
                   Supprimer
@@ -138,16 +149,10 @@ export const RecetteTab = ({
                         />
                       </button>
                     </td>
-                    <td className="p-2 border-r border-b border-gray-300 min-w-[100px]">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={0}
-                        readOnly
-                        className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center"
-                      />
+                    <td className="p-2 border-r border-b border-gray-300 min-w-[100px] text-center">
+                      0
                     </td>
-                    <td className="p-2 border-b border-gray-300 flex justify-center items-center min-w-[100px]">
+                    <td className="p-3 border-b border-gray-300 flex justify-center items-center min-w-[100px]">
                       <Trash2
                         className="w-6 h-6 p-1 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded cursor-pointer"
                         onClick={() => {
@@ -180,7 +185,7 @@ export const RecetteTab = ({
       </div>
 
       {/* Version Mobile - Cartes */}
-      <div className="md:hidden space-y-4 mb-4">
+      <div className="md:hidden space-y-4 mb-4 text-gray-700">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="w-full bg-[#4B352A] text-white p-3 rounded-lg font-medium flex justify-between items-center"
@@ -268,33 +273,55 @@ export const RecetteTab = ({
                             );
                           }
                         }}
-                        className="w-16 p-1 text-sm border border-gray-300 rounded text-center"
+                        className="w-16 p-1 text-sm border text-gray-600 border-gray-300 rounded text-center"
                         placeholder="-"
                         disabled={item.id === "0"}
                       />
+                      <button
+                        className={`m-2`}
+                        title={`Dosage recommandé : ${ingredient.dosageRecommande}`}
+                      >
+                        <CircleQuestionMark
+                          className={`w-4 h-4 rounded font-medium text-amber-500 text-center`}
+                        />
+                      </button>
                     </div>
 
                     <div>
-                      <span className="text-gray-500">Coût: </span>
-                      <input
+                      <div className="flex gap-1">
+                        <span className="text-gray-500">Coût: </span>
+                        <select name="">
+                          <option value="XOF" className="text-gray-600">
+                            XOF
+                          </option>
+                          <option value="$" className="text-gray-600">
+                            $
+                          </option>
+                          <option value="€" className="text-gray-600">
+                            €
+                          </option>
+                        </select>
+                      </div>
+                      <span>0</span>
+                      {/* <input
                         type="number"
                         step="0.01"
                         value={0}
                         readOnly
                         className="w-16 p-1 text-sm border border-gray-300 rounded text-center"
-                      />
+                      /> */}
                     </div>
                   </div>
                 </div>
               ))}
 
-              <div className="bg-blue-100 p-3 font-bold text-blue-800 flex justify-between">
+              {/* <div className="bg-blue-100 p-3 font-bold text-blue-800 flex justify-between">
                 <span>TOTAL</span>
                 <div className="flex space-x-4">
                   <span>100%</span>
                   <span>0.00€</span>
                 </div>
-              </div>
+              </div> */}
             </div>
           ))}
       </div>
