@@ -37,6 +37,7 @@ const NewRecipe = () => {
   // Structure des phases avec lignes vides par défaut
   const [phaseData, setPhaseData] = useState<PhaseData[]>([]);
   const [QSPphase, setQSPphase] = useState<PhaseType>();
+  const [QSP, setQSP] = useState<IngredientType>();
   const [currentPhase, setCurrentPhase] = useState<PhaseType | null>();
   const [activeTab, setActiveTab] = useState<string>("tous");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -65,7 +66,7 @@ const NewRecipe = () => {
     const localResult = localStorage.getItem("currentResult");
     const localPhaseData = localStorage.getItem("phaseData");
     const localQSP = localStorage.getItem("currentQSP");
-    if (localRecette && localResult && localPhaseData && localQSP) {
+    if (localRecette || localResult || localPhaseData || localQSP) {
       setHaveLocalStorage(true);
     } else {
       setHaveLocalStorage(false);
@@ -77,23 +78,30 @@ const NewRecipe = () => {
     const localResult = localStorage.getItem("currentResult");
     const localPhaseData = localStorage.getItem("phaseData");
     const localQSP = localStorage.getItem("currentQSP");
-    if (
-      haveLocalStorage &&
-      localRecette &&
-      localResult &&
-      localPhaseData &&
-      localQSP
-    ) {
-      const data: RecipeType = JSON.parse(localRecette!) || undefined;
-      const phase_data: PhaseData[] = JSON.parse(localPhaseData!) || [];
-      const result_data: RecipeResult = JSON.parse(localResult!) || undefined;
-      const QSP_data: PhaseType = JSON.parse(localQSP!) || undefined;
+    const QSP = localStorage.getItem("QSP");
+    if (haveLocalStorage && localRecette) {
+      const data: RecipeType = JSON.parse(localRecette);
       setRecipeName(data.nom);
       setDescription(data.description);
       setTotalQuantity(data.poidsTotal.toString());
-      setPhaseData(phase_data);
+    }
+
+    if (haveLocalStorage && localQSP && QSP) {
+      const QSP_data: PhaseType = JSON.parse(localQSP);
+      const qspData: IngredientType = JSON.parse(QSP);
+      setQSP(qspData);
       setQSPphase(QSP_data);
       setHaveQSP(true);
+      addIngredientToPhase("0", qspData);
+    }
+
+    if (haveLocalStorage && localPhaseData) {
+      const phase_data: PhaseData[] = JSON.parse(localPhaseData);
+      setPhaseData(phase_data);
+    }
+
+    if (haveLocalStorage && localResult) {
+      const result_data: RecipeResult = JSON.parse(localResult);
       setRecipeResult(result_data);
     }
     // else {
@@ -106,7 +114,7 @@ const NewRecipe = () => {
     //   setRecipeResult(undefined);
     // localStorage.removeItem("currentRecette");
     // }
-  }, [haveLocalStorage, phaseAll]);
+  }, [haveLocalStorage]);
 
   useEffect(() => {
     if (session && session.accessToken) {
@@ -362,27 +370,27 @@ const NewRecipe = () => {
     });
   };
 
-  const addRecipeToPhase = async (
-    phaseAll: PhaseType[],
-    createdRecipe: RecipeType
-  ) => {
-    try {
-      phaseAll.map(async (item, index) => {
-        const response = await axios.post(
-          `${api.base_url}/phase/${item._id}/add-recipe`,
-          { recipeId: createdRecipe._id },
-          {
-            headers: {
-              Authorization: `Bearer ${session?.accessToken}`,
-            },
-          }
-        );
-        return response ? true : false;
-      });
-    } catch (error: any) {
-      console.log("something gone wrong", error.response.data);
-    }
-  };
+  // const addRecipeToPhase = async (
+  //   phaseAll: PhaseType[],
+  //   createdRecipe: RecipeType
+  // ) => {
+  //   try {
+  //     phaseAll.map(async (item, index) => {
+  //       const response = await axios.post(
+  //         `${api.base_url}/phase/${item._id}/add-recipe`,
+  //         { recipeId: createdRecipe._id },
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${session?.accessToken}`,
+  //           },
+  //         }
+  //       );
+  //       return response ? true : false;
+  //     });
+  //   } catch (error: any) {
+  //     console.log("something gone wrong", error.response.data);
+  //   }
+  // };
 
   const createRecipe = async () => {
     try {
@@ -396,7 +404,7 @@ const NewRecipe = () => {
       const data = {
         nom: recipeName,
         description: description,
-        poidsTotal: Number(totalQuantity),
+        poidsTotal: Number(totalQuantity.replace(",", ".")),
       };
       console.log(data);
       const response = await axios.post(`${api.base_url}/recipe`, data, {
@@ -568,6 +576,7 @@ const NewRecipe = () => {
     localStorage.removeItem("currentResult");
     localStorage.removeItem("phaseData");
     localStorage.removeItem("currentQSP");
+    localStorage.removeItem("QSP");
     setHaveLocalStorage(false);
     setRecipeName("");
     setDescription("");
@@ -604,8 +613,7 @@ const NewRecipe = () => {
   //   );
   // };
 
-  const calculatedTotal: number =
-    Number(totalQuantity)! * (unit === "g" ? 1 : 1);
+  const calculatedTotal: string = totalQuantity;
 
   return (
     <div
@@ -696,9 +704,10 @@ const NewRecipe = () => {
                     <input
                       type="text"
                       value={
-                        /^[0-9]*[,.]?[0-9]*$/.test(totalQuantity.toString())
-                          ? totalQuantity
-                          : ""
+                        totalQuantity
+                        // /^[0-9]*[,.]?[0-9]*$/.test(totalQuantity.toString())
+                        //   ? totalQuantity
+                        //   : ""
                       }
                       placeholder="Saisissez"
                       onChange={(e) => {
@@ -712,10 +721,10 @@ const NewRecipe = () => {
                           }
                         } else {
                           CustomErrorToast(
-                            "Seul les chiffres sont utilisés. Valeur réinitialisée.",
+                            "Votre entrée n'est pas valide",
                             5000
                           );
-                          setTotalQuantity("");
+                          // setTotalQuantity("");
                         }
                       }}
                       className="w-20 p-2 text-gray-700 border border-gray-300 rounded text-center focus:ring-2 focus:ring-[#4B352A] focus:border-transparent outline-none"
@@ -804,9 +813,7 @@ const NewRecipe = () => {
             </div>
 
             <button
-              onClick={async () => {
-                await resertReceipe();
-              }}
+              onClick={() => resertReceipe()}
               className="mt-4 text-sm text-[#4B352A] hover:text-[#3e2b22] underline cursor-pointer"
             >
               Modifier les informations de base
@@ -821,6 +828,8 @@ const NewRecipe = () => {
             {/* QSP and temperature */}
             <div className="mb-6 flex items-center gap-6">
               <QSPSelect
+                qsp={QSP}
+                setQSP={setQSP}
                 ingredients={ingredientAll}
                 onSelect={async (data) => {
                   await resertReceipePhase();
@@ -834,6 +843,7 @@ const NewRecipe = () => {
                   setQSPphase(phase);
                   setHaveQSP(true);
                   localStorage.setItem("currentQSP", JSON.stringify(phase));
+                  localStorage.setItem("QSP", JSON.stringify(data));
                   await addIngredientToPhase("0", data);
                 }}
                 resetTrigger={resetQSP} // passez une prop qui change quand vous voulez reset
@@ -916,7 +926,7 @@ const NewRecipe = () => {
 
                 <button
                   className="bg-[#4B352A] text-white px-4 py-2 rounded hover:bg-[#36261e] flex items-center gap-2 cursor-pointer"
-                  onClick={async () => await resertReceipe()}
+                  onClick={() => resertReceipe()}
                 >
                   <RotateCcw className="w-4 h-4" />
                   Réinitialiser

@@ -118,13 +118,13 @@ export const RecetteTab = ({
                           let value = e.target.value;
                           if (/^[0-9]*[,.]?[0-9]*$/.test(value)) {
                             const checkdecimal = [...value].filter(
-                              (char) => char === "."
+                              (char) => char === "." || char === ","
                             ).length;
                             if (checkdecimal <= 1) {
                               updateIngredientQuantity(
                                 item.id,
                                 ingredient._id,
-                                value
+                                value.replace(",", ".")
                               );
                             }
                           } else {
@@ -132,7 +132,7 @@ export const RecetteTab = ({
                             updateIngredientQuantity(
                               item.id,
                               ingredient._id,
-                              value
+                              value.replace(",", ".")
                             );
                           }
                         }}

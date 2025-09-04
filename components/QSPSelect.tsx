@@ -2,23 +2,32 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { IngredientType } from "@/types/ingredient.type";
 
 interface QSPSelectProps {
+  qsp: IngredientType | undefined;
+  setQSP: React.Dispatch<React.SetStateAction<IngredientType | undefined>>;
   ingredients: IngredientType[];
   onSelect: (ingredient: IngredientType) => void;
   resetTrigger: boolean;
 }
 
-const QSPSelect = ({ ingredients, onSelect, resetTrigger }: QSPSelectProps) => {
+const QSPSelect = ({
+  qsp,
+  setQSP,
+  ingredients,
+  onSelect,
+  resetTrigger,
+}: QSPSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedIngredient, setSelectedIngredient] =
-    useState<IngredientType | null>(null);
+  // const [selectedIngredient, setSelectedIngredient] = useState<
+  //   IngredientType | undefined
+  // >(qsp);
   const selectRef = useRef<HTMLDivElement>(null);
 
   // Reset selection when resetTrigger changes
-  useEffect(() => {
-    setSelectedIngredient(null);
-    setSearchTerm("");
-  }, [resetTrigger]);
+  // useEffect(() => {
+  //   setSelectedIngredient(undefined);
+  //   setSearchTerm("");
+  // }, [resetTrigger]);
 
   // Filter ingredients based on search term
   const filteredIngredients = useMemo(() => {
@@ -51,7 +60,7 @@ const QSPSelect = ({ ingredients, onSelect, resetTrigger }: QSPSelectProps) => {
   }, []);
 
   const handleSelect = (ingredient: IngredientType) => {
-    setSelectedIngredient(ingredient);
+    setQSP(ingredient);
     onSelect(ingredient);
     setIsOpen(false);
     setSearchTerm("");
@@ -67,12 +76,8 @@ const QSPSelect = ({ ingredients, onSelect, resetTrigger }: QSPSelectProps) => {
           className="flex justify-between items-center p-2 border border-gray-300 rounded bg-white cursor-pointer"
           onClick={() => setIsOpen(!isOpen)}
         >
-          <span
-            className={selectedIngredient ? "text-gray-700" : "text-gray-500"}
-          >
-            {selectedIngredient
-              ? selectedIngredient.nom
-              : "Sélectionnez un QSP"}
+          <span className={qsp ? "text-gray-700" : "text-gray-500"}>
+            {qsp ? qsp.nom : "Sélectionnez un QSP"}
           </span>
           <svg
             className={`w-5 h-5 text-gray-500 transition-transform ${
