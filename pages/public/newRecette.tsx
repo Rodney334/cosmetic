@@ -9,23 +9,20 @@ import {
   Camera,
 } from "lucide-react";
 import { usePhaseStore } from "@/stores/phase.store";
-import { useSession } from "next-auth/react";
 import { IngredientType } from "@/types/ingredient.type";
 import { PhaseData } from "@/types/recipe.type";
 
 const RecipeInterface = () => {
-  const { data: session } = useSession();
-
   const { phaseAll, getAllPhase } = usePhaseStore();
 
   // Structure des phases avec lignes vides par défaut
   const [phaseData, setPhaseData] = useState<PhaseData[]>([]);
 
-  useEffect(() => {
-    if (session && session.accessToken) {
-      getAllPhase(session.accessToken);
-    }
-  }, [session]);
+  // useEffect(() => {
+  //   if (session && session.accessToken) {
+  //     getAllPhase(session.accessToken);
+  //   }
+  // }, [session]);
 
   useEffect(() => {
     if (phaseAll?.length > 0 && phaseData.length === 0) {

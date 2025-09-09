@@ -1,5 +1,6 @@
 import { CustomErrorToast } from "@/components/CustomToast";
 import { api } from "@/constantes/api.constante";
+import apiClient from "@/lib/axios";
 import {
   IngredientByCategorieType,
   IngredientType,
@@ -12,13 +13,10 @@ interface IngredientStoreInterface {
   ingredientsByCategory: IngredientByCategorieType[];
   ingredientsByPhase: IngredientByCategorieType[];
   ingredientQSP: IngredientType[];
-  getAllIngredient: (token: string) => Promise<void>;
-  groupIngredientsByCategory: (token: string) => Promise<void>;
-  getIngredientQSP: (token: string) => Promise<void>;
-  groupIngredientsByPhase: (
-    token: string,
-    phaseId: string
-  ) => Promise<IngredientType[]>;
+  getAllIngredient: () => Promise<void>;
+  groupIngredientsByCategory: () => Promise<void>;
+  getIngredientQSP: () => Promise<void>;
+  groupIngredientsByPhase: (phaseId: string) => Promise<IngredientType[]>;
 }
 
 export const useIngredientStore = create<IngredientStoreInterface>(
@@ -28,13 +26,9 @@ export const useIngredientStore = create<IngredientStoreInterface>(
     ingredientsByPhase: [],
     ingredientQSP: [],
 
-    getAllIngredient: async (token: string) => {
+    getAllIngredient: async () => {
       try {
-        const response = await axios.get(`${api.base_url}/ingredient`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await apiClient.get(`/ingredient`);
         // console.log(response.data);
         set({ ingredientAll: response.data });
       } catch (error) {
@@ -42,17 +36,10 @@ export const useIngredientStore = create<IngredientStoreInterface>(
       }
     },
 
-    groupIngredientsByCategory: async (token: string) => {
+    groupIngredientsByCategory: async () => {
       try {
         const response: AxiosResponse<IngredientByCategorieType[]> =
-          await axios.get(
-            `${api.base_url}/ingredientcategorie/grouped-by-category`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          await apiClient.get(`/ingredientcategorie/grouped-by-category`);
         // console.log(response.data);
         const sortedData = response.data.sort((a, b) =>
           a.category.nom.localeCompare(b.category.nom, "fr", {
@@ -65,15 +52,10 @@ export const useIngredientStore = create<IngredientStoreInterface>(
       }
     },
 
-    groupIngredientsByPhase: async (token: string, phaseId: string) => {
+    groupIngredientsByPhase: async (phaseId: string) => {
       try {
-        const response: AxiosResponse<IngredientType[]> = await axios.get(
-          `${api.base_url}/phase/${phaseId}/allowed-ingredients`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        const response: AxiosResponse<IngredientType[]> = await apiClient.get(
+          `/phase/${phaseId}/allowed-ingredients`
         );
         // console.log(response.data);
         const sortedData = response.data.sort((a, b) =>
@@ -88,15 +70,10 @@ export const useIngredientStore = create<IngredientStoreInterface>(
       }
     },
 
-    getIngredientQSP: async (token: string) => {
+    getIngredientQSP: async () => {
       try {
-        const response: AxiosResponse<IngredientType[]> = await axios.get(
-          `${api.base_url}/ingredient/qsp`, // Adaptez l'URL selon votre API
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        const response: AxiosResponse<IngredientType[]> = await apiClient.get(
+          "/ingredient/qsp"
         );
         set({ ingredientQSP: response.data });
       } catch (error) {

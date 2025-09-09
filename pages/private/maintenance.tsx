@@ -1,10 +1,7 @@
-// /pages/private/dashboard.tsx
-// import { getSession, signOut, useSession } from 'next-auth/react';
-import type { NextPageWithLayout } from '@/types';
-import { useRouter } from 'next/router';
+import type { NextPageWithLayout } from "@/types";
+import { useRouter } from "next/router";
 
 const Maintenance: NextPageWithLayout = () => {
-  // const { data: session, status } = useSession();
   const router = useRouter();
 
   // if (status === 'loading') return <div>Chargement...</div>;
@@ -15,13 +12,11 @@ const Maintenance: NextPageWithLayout = () => {
       <p className="mt-2">Bienvenue</p>
     </div>
   );
-}
+};
 
 Maintenance.isDashboard = true;
 
 export default Maintenance;
 // export const getServerSideProps = async (ctx: any) => {
-//   const session = await getSession(ctx);
-//   if (!session) return { redirect: { destination: '/public/login' } };
-//   return { props: {} };
+
 // };

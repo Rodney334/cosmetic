@@ -1,6 +1,7 @@
 export type CategorieIngredientType = {
   _id: string;
   nom: string;
+  ingredients: IngredientType[];
   createdAt: string;
   updatedAt: string;
   __v: number;

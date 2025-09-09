@@ -10,24 +10,36 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useIngredientStore } from "@/stores/ingredient.store";
-import { useSession } from "next-auth/react";
 import { usePhaseStore } from "@/stores/phase.store";
 import { RecetteTab } from "@/components/RecetteTabComponent";
 import { PhaseData, RecipeResult, RecipeType } from "@/types/recipe.type";
-import { PhaseType } from "@/types/phase.type";
-import { IngredientType } from "@/types/ingredient.type";
+import { PhaseCategorieIngredientsType, PhaseType } from "@/types/phase.type";
+import {
+  CategorieIngredientType,
+  IngredientType,
+} from "@/types/ingredient.type";
 import { PhaseTab } from "@/components/PhaseTabComponent";
-import { CustomErrorToast, CustomSuccessToast } from "@/components/CustomToast";
+import {
+  CustomErrorToast,
+  CustomSuccessToast,
+  CustomToast,
+} from "@/components/CustomToast";
 import axios from "axios";
 import { api } from "@/constantes/api.constante";
 import QSPSelect from "@/components/QSPSelect";
+import { IngredientTab } from "@/components/IngredientTabComponent";
+import { authStore } from "@/stores/auth.store";
+import apiClient from "@/lib/axios";
 
 const NewRecipe = () => {
-  const { data: session } = useSession();
+  const { token, refreshToken } = authStore();
+  const { phases, getPhases } = usePhaseStore();
+
   const {
     ingredientsByCategory,
     ingredientQSP,
     ingredientAll,
+    getIngredientQSP,
     getAllIngredient,
     groupIngredientsByCategory,
   } = useIngredientStore();
@@ -36,11 +48,8 @@ const NewRecipe = () => {
 
   // Structure des phases avec lignes vides par défaut
   const [phaseData, setPhaseData] = useState<PhaseData[]>([]);
-  const [QSPphase, setQSPphase] = useState<PhaseType>();
+  const [QSPphase, setQSPphase] = useState<PhaseCategorieIngredientsType>();
   const [QSP, setQSP] = useState<IngredientType>();
-  const [currentPhase, setCurrentPhase] = useState<PhaseType | null>();
-  const [activeTab, setActiveTab] = useState<string>("tous");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [phaseIngredient, setPhaseIngretient] = useState<IngredientType[]>([]);
   const [recipeResult, setRecipeResult] = useState<RecipeResult>();
 
@@ -48,7 +57,6 @@ const NewRecipe = () => {
   const [description, setDescription] = useState<string>("");
   const [totalQuantity, setTotalQuantity] = useState<string>("");
   const [unit, setUnit] = useState<string>("g");
-  // const [qsp100, setQsp100] = useState<string>("Eau déminéralisée");
   const [hotRecipe, setHotRecipe] = useState<boolean>(false);
   const [coldRecipe, setColdRecipe] = useState<boolean>(false);
   const [searchIngredient, setSearchIngredient] = useState<string>("");
@@ -60,6 +68,84 @@ const NewRecipe = () => {
   const [haveQSP, setHaveQSP] = useState<boolean>(false);
   const [resetQSP, setResetQSP] = useState<boolean>(false);
   const [switcher, setSwitcher] = useState<boolean>(false);
+
+  // new state
+  const [activeTab, setActiveTab] = useState<string>("Tous");
+  const [ingredient, setIngretient] = useState<IngredientType[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [currentPhase, setCurrentPhase] =
+    useState<PhaseCategorieIngredientsType | null>();
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [tokenIsValid, setTokenIsValid] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkTokenIsValid = async () => {
+      console.log({ token });
+      try {
+        await apiClient.get("/auth/verify-token");
+        setTokenIsValid(true);
+      } catch (error: any) {
+        setTokenIsValid(false);
+        console.log({ error });
+      }
+    };
+    if (token) {
+      checkTokenIsValid();
+    }
+  }, [token, refreshToken]);
+
+  useEffect(() => {
+    if (token && tokenIsValid) {
+      console.log({ token, tokenIsValid });
+      getPhases();
+      getIngredientQSP();
+    }
+  }, [token, tokenIsValid]);
+
+  // useEffect(() => {
+  //   if (phases?.length > 0 && phaseData.length === 0) {
+  //     console.log("initialisation de phase data");
+  //     const initialPhaseData = [
+  //       // Phase QSP toujours en première position
+  //       {
+  //         id: "0",
+  //         title: "QSP",
+  //         ingredients: [],
+  //         allowedCategories: [],
+  //       },
+  //       // Puis les phases de l'API
+  //       ...phases.map((el) => ({
+  //         id: el._id,
+  //         title: el.nom,
+  //         ingredients: [],
+  //         allowedCategories: el.categories,
+  //       })),
+  //     ];
+  //     setPhaseData(initialPhaseData);
+  //   }
+  // }, [phases]);
+
+  // useEffect(() => {
+  //   if (phases && phases.length > 0) {
+  //     setCurrentPhase(phases[0]);
+  //     setActiveTab(phases[0]._id);
+  //     setIngretient(phases[0].ingredientsPossible);
+  //   }
+  // }, [phases]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    if (!value) {
+      setIngretient(currentPhase!.ingredients);
+      return;
+    }
+    console.log({ value });
+    setIngretient(
+      currentPhase!.ingredientsPossible.filter((el) =>
+        el.nom.toLowerCase().includes(value.toLowerCase())
+      )
+    );
+  };
 
   useEffect(() => {
     const localRecette = localStorage.getItem("currentRecette");
@@ -87,12 +173,11 @@ const NewRecipe = () => {
     }
 
     if (haveLocalStorage && localQSP && QSP) {
-      const QSP_data: PhaseType = JSON.parse(localQSP);
+      const QSP_data: PhaseCategorieIngredientsType = JSON.parse(localQSP);
       const qspData: IngredientType = JSON.parse(QSP);
       setQSP(qspData);
       setQSPphase(QSP_data);
       setHaveQSP(true);
-      addIngredientToPhase("0", qspData);
     }
 
     if (haveLocalStorage && localPhaseData) {
@@ -117,54 +202,63 @@ const NewRecipe = () => {
   }, [haveLocalStorage]);
 
   useEffect(() => {
-    if (session && session.accessToken) {
-      getAllIngredient(session.accessToken);
-      groupIngredientsByCategory(session.accessToken);
-      getAllPhase(session.accessToken);
+    if (QSPphase && QSP && phases.length > 0) {
+      console.log({ QSP });
+      addIngredientToPhase("0", QSP);
     }
-  }, [session]);
-
-  useEffect(() => {
-    if (phaseAll?.length > 0 && phaseData.length === 0) {
-      const initialPhaseData = [
-        // Phase QSP toujours en première position
-        {
-          id: "0",
-          title: "QSP",
-          ingredients: [],
-          allowedCategories: [],
-        },
-        // Puis les phases de l'API
-        ...phaseAll.map((el) => ({
-          id: el._id,
-          title: el.nom,
-          ingredients: [],
-          allowedCategories: el.allowedCategories,
-        })),
-      ];
-      setPhaseData(initialPhaseData);
-    }
-  }, [phaseAll]);
+  }, [QSP, QSPphase, phases]);
 
   // Pour ajouter un ingrédient à une phase spécifique
   const addIngredientToPhase = async (
     phaseId: string,
     ingredient: IngredientType
   ) => {
-    setPhaseData((prev) =>
-      prev.map((phase) => {
+    console.log("called");
+    console.log({ phaseId, ingredient, QSP });
+    setPhaseData((prev) => {
+      console.log({ phasedatalength: prev.length });
+      if (prev.length === 0) {
+        const newIngredient = { ...ingredient, quantite: 100 };
+        console.log("after new ingredient");
+
+        // initialize phaseData
+        const initialPhaseData = [
+          // Phase QSP toujours en première position
+          {
+            id: "0",
+            title: "QSP",
+            ingredients: [newIngredient],
+            allowedCategories: [],
+          },
+          // Puis les phases de l'API
+          ...phases.map((el) => ({
+            id: el._id,
+            title: el.nom,
+            ingredients: [],
+            allowedCategories: el.categories,
+          })),
+        ];
+
+        console.log({ initialPhaseData, phases });
+
+        return initialPhaseData;
+      }
+      return prev.map((phase) => {
         if (phase.id !== phaseId) return phase;
 
         // Pour la phase QSP, on force la quantité à 100
         const newIngredient =
           phaseId === "0" ? { ...ingredient, quantite: 100 } : ingredient;
-
+        console.log("after new ingredient");
         return {
           ...phase,
-          ingredients: [...phase.ingredients, newIngredient],
+          ingredients:
+            phaseId === "0"
+              ? [newIngredient]
+              : [...phase.ingredients, newIngredient],
         };
-      })
-    );
+      });
+    });
   };
 
   // Pour ajouter un ingrédient à une phase spécifique
@@ -198,99 +292,16 @@ const NewRecipe = () => {
       const localRecette = localStorage.getItem("currentRecette");
       if (localRecette) {
         const currentRecette = JSON.parse(localRecette);
-        const response = await axios.delete(
-          `${api.base_url}/recipeingredient/recipes/${currentRecette._id}/ingredients/${ingredient._id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${session?.accessToken}`,
-            },
-          }
+        const response = await apiClient.delete(
+          `/recipeingredient/recipes/${currentRecette._id}/ingredients/${ingredient._id}`
         );
         console.log({ delete: response.data });
       }
+      CustomToast({ success: true, text: "Ingrédient supprimé" });
     } catch (error: any) {
       console.log("error :", error.response.data);
-    } finally {
-      CustomSuccessToast("Ingrédient supprimé");
     }
   };
-
-  // const updateIngredientQuantity = (
-  //   phaseId: string,
-  //   ingredientId: string,
-  //   newQuantity: number
-  // ) => {
-  //   console.log({ newQuantity });
-  //   setPhaseData((prevPhases) => {
-  //     // Fonction helper pour limiter à 2 décimales
-  //     const toTwoDecimals = (num: number) => parseFloat(num.toFixed(2));
-
-  //     // 1. Validation initiale
-  //     if (phaseId === "0") return prevPhases;
-
-  //     const qspPhase = prevPhases.find((phase) => phase.id === "0");
-  //     if (!qspPhase?.ingredients.length) return prevPhases;
-  //     const [qspIngredient] = qspPhase.ingredients;
-
-  //     // 2. Trouver l'ingrédient cible
-  //     const targetPhase = prevPhases.find((phase) => phase.id === phaseId);
-  //     const targetIngredient = targetPhase?.ingredients.find(
-  //       (ing) => ing._id === ingredientId
-  //     );
-  //     if (!targetIngredient) return prevPhases;
-
-  //     // Formatage de l'ancienne quantité
-  //     const oldQuantity = toTwoDecimals(targetIngredient.quantite || 0);
-
-  //     // 3. Cas spécial : remise à zéro (backspace)
-  //     const isResetToZero = newQuantity === 0 && oldQuantity > 0;
-
-  //     // 4. Calcul des nouvelles valeurs (avec formatage)
-  //     let newQspQuantity = toTwoDecimals(qspIngredient.quantite);
-  //     let finalQuantity = toTwoDecimals(
-  //       Math.max(0, Math.min(newQuantity, 100))
-  //     );
-
-  //     if (isResetToZero) {
-  //       // Cas spécial : on remet toute la quantité dans QSP
-  //       newQspQuantity = toTwoDecimals(
-  //         Math.min(100, qspIngredient.quantite + oldQuantity)
-  //       );
-  //       finalQuantity = 0;
-  //     } else {
-  //       // Cas normal
-  //       const quantityDiff = toTwoDecimals(finalQuantity - oldQuantity);
-  //       newQspQuantity = toTwoDecimals(qspIngredient.quantite - quantityDiff);
-  //     }
-
-  //     // 5. Validation des limites
-  //     if (newQspQuantity < 0 || newQspQuantity > 100) {
-  //       return prevPhases;
-  //     }
-
-  //     // 6. Mise à jour
-  //     return prevPhases.map((phase) => {
-  //       if (phase.id === phaseId) {
-  //         const updatedIngredients = phase.ingredients.map((ingredient) => {
-  //           return ingredient._id === ingredientId
-  //             ? { ...ingredient, quantite: finalQuantity }
-  //             : ingredient;
-  //         });
-
-  //         return { ...phase, ingredients: updatedIngredients };
-  //       }
-
-  //       if (phase.id === "0") {
-  //         return {
-  //           ...phase,
-  //           ingredients: [{ ...qspIngredient, quantite: newQspQuantity }],
-  //         };
-  //       }
-
-  //       return phase;
-  //     });
-  //   });
-  // };
 
   const updateIngredientQuantity = (
     phaseId: string,
@@ -312,7 +323,6 @@ const NewRecipe = () => {
       const [qspIngredient] = qspPhase.ingredients;
 
       // 2. Convertir la string en nombre
-      // const numericQuantity = parseFloat(newQuantity.replace(",", "."));
       const numericQuantity = newQuantity;
       if (!/^[0-9]*[,.]?[0-9]*$/.test(numericQuantity)) {
         return prevPhases; // Si la conversion échoue
@@ -326,18 +336,13 @@ const NewRecipe = () => {
       if (!targetIngredient) return prevPhases;
 
       // Formatage de l'ancienne quantité
-      // const oldQuantity = toTwoDecimals(targetIngredient.quantite || 0);
       const oldQuantity = targetIngredient.quantite || 0;
 
       // 4. Calcul des nouvelles valeurs (avec formatage)
-      // let newQspQuantity = toTwoDecimals(qspIngredient.quantite);
-      // const finalQuantity = toTwoDecimals(numericQuantity);
       let newQspQuantity = qspIngredient.quantite;
       const finalQuantity = newQuantity;
 
       // Cas normal
-      // const quantityDiff = toTwoDecimals(finalQuantity - oldQuantity);
-      // newQspQuantity = toTwoDecimals(qspIngredient.quantite - quantityDiff);
       const quantityDiff = toTwoDecimals(Number(finalQuantity) - oldQuantity);
       newQspQuantity = toTwoDecimals(qspIngredient.quantite - quantityDiff);
 
@@ -370,35 +375,14 @@ const NewRecipe = () => {
     });
   };
 
-  // const addRecipeToPhase = async (
-  //   phaseAll: PhaseType[],
-  //   createdRecipe: RecipeType
-  // ) => {
-  //   try {
-  //     phaseAll.map(async (item, index) => {
-  //       const response = await axios.post(
-  //         `${api.base_url}/phase/${item._id}/add-recipe`,
-  //         { recipeId: createdRecipe._id },
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${session?.accessToken}`,
-  //           },
-  //         }
-  //       );
-  //       return response ? true : false;
-  //     });
-  //   } catch (error: any) {
-  //     console.log("something gone wrong", error.response.data);
-  //   }
-  // };
-
   const createRecipe = async () => {
     try {
       setIsCreating(true);
       if (!recipeName || !description || !totalQuantity) {
-        CustomErrorToast(
-          "Tous les champs sont obligatoires et la quantité totale ne peut pas être zéro."
-        );
+        CustomToast({
+          success: false,
+          text: "Tous les champs sont obligatoires et la quantité totale ne peut pas être zéro.",
+        });
         return;
       }
       const data = {
@@ -407,18 +391,20 @@ const NewRecipe = () => {
         poidsTotal: Number(totalQuantity.replace(",", ".")),
       };
       console.log(data);
-      const response = await axios.post(`${api.base_url}/recipe`, data, {
-        headers: {
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-      });
+      const response = await apiClient.post("/recipe", data);
       // console.log(response.data);
       localStorage.setItem("currentRecette", JSON.stringify(response.data));
       setHaveLocalStorage(true);
       // addRecipeToPhase(phaseAll, response.data);
-      CustomSuccessToast("Enregistré");
+      CustomToast({
+        success: true,
+        text: "Enregistré",
+      });
     } catch (error) {
-      CustomErrorToast("La création de la récette a échoué.");
+      CustomToast({
+        success: false,
+        text: "La création de la récette a échoué.",
+      });
     } finally {
       setIsCreating(false);
     }
@@ -484,11 +470,11 @@ const NewRecipe = () => {
             quantite: ingredient.quantite,
             unite: "%",
           };
-          await axios.post(`${api.base_url}/recipeingredient/upsert`, data, {
-            headers: {
-              Authorization: `Bearer ${session?.accessToken}`,
-            },
-          });
+          try {
+            await apiClient.post(`/recipeingredient/upsert`, data);
+          } catch (error: any) {
+            console.error({ error: error.response.data });
+          }
         });
       });
       localStorage.setItem("phaseData", JSON.stringify(phaseData));
@@ -499,29 +485,31 @@ const NewRecipe = () => {
 
   const finalResult = async (recipeId: string) => {
     try {
-      const response = await axios.get(
-        `${api.base_url}/recipe/${recipeId}/calculer`,
-        {
-          headers: {
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-        }
-      );
+      const response = await apiClient.get(`/recipe/${recipeId}/calculer`);
       console.log({ response: response.data });
       setRecipeResult(response.data);
       setSwitcher(true);
-      CustomSuccessToast("Calcul effectué.");
+      CustomToast({
+        success: true,
+        text: "Calcul effectué.",
+      });
       localStorage.setItem("currentResult", JSON.stringify(response.data));
     } catch (error: any) {
       console.log("finale result error :", error.response.data);
-      CustomErrorToast("Echec du calcul.");
+      CustomToast({
+        success: false,
+        text: "Echec du calcul.",
+      });
     }
   };
 
   const handleCalculate = async () => {
     try {
       if (checkValideIngredientForRecipeData(phaseData) == false) {
-        CustomErrorToast("Les quantités des ingrédients ne peut être nulles");
+        CustomToast({
+          success: false,
+          text: "Les quantités des ingrédients ne peut être nulles",
+        });
         return;
       }
       setIsCalculating(true);
@@ -531,7 +519,7 @@ const NewRecipe = () => {
         await saveIngredientForRecipe(recipe._id);
         await finalResult(recipe._id);
       } else {
-        CustomErrorToast("Valider d'abord votre recette");
+        CustomToast({ success: false, text: "Valider d'abord votre recette" });
         return;
       }
     } catch (error: any) {
@@ -543,28 +531,23 @@ const NewRecipe = () => {
 
   const handleSaveResult = async () => {
     try {
-      console.log("saving");
+      // console.log("saving");
       setIsSaving(true);
       const localRecette = localStorage.getItem("currentRecette");
       if (localRecette) {
         const recipe: RecipeType = JSON.parse(localRecette);
-        const response = await axios.post(
-          `${api.base_url}/recipe/${recipe._id}/savefinalresult`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${session?.accessToken}`,
-            },
-          }
+        const response = await apiClient.post(
+          `/recipe/${recipe._id}/savefinalresult`,
+          {}
         );
         console.log({ response: response.data });
-        CustomSuccessToast("Résultat sauvegardé");
+        CustomToast({ success: true, text: "Résultat sauvegardé" });
       } else {
-        CustomErrorToast("Erreur de la sauvegarde.");
+        CustomToast({ success: false, text: "Erreur de la sauvegarde." });
       }
     } catch (error: any) {
       console.log("finale result error :", error.response.data);
-      CustomErrorToast("Echec de la sauvegarde.");
+      CustomToast({ success: false, text: "Echec de la sauvegarde." });
     } finally {
       setIsSaving(false);
     }
@@ -586,7 +569,7 @@ const NewRecipe = () => {
     setHaveQSP(false);
     setRecipeResult(undefined);
     await resertReceipePhase();
-    CustomSuccessToast("Recette réinitialisée");
+    CustomToast({ success: true, text: "Recette réinitialisée" });
   };
 
   // const getTotalPercentage = (): number => {
@@ -720,10 +703,10 @@ const NewRecipe = () => {
                             setTotalQuantity(value);
                           }
                         } else {
-                          CustomErrorToast(
-                            "Votre entrée n'est pas valide",
-                            5000
-                          );
+                          CustomToast({
+                            success: false,
+                            text: "Votre entrée n'est pas valide",
+                          });
                           // setTotalQuantity("");
                         }
                       }}
@@ -830,12 +813,12 @@ const NewRecipe = () => {
               <QSPSelect
                 qsp={QSP}
                 setQSP={setQSP}
-                ingredients={ingredientAll}
+                ingredients={ingredientQSP}
                 onSelect={async (data) => {
                   await resertReceipePhase();
-                  const phase = phaseAll.find((el) => {
-                    return el.allowedCategories.find(
-                      (el) => el._id === data.categorie._id
+                  const phase = phases.find((el) => {
+                    return el.ingredientsPossible.find(
+                      (el) => el._id === data._id
                     );
                   });
                   if (!phase) return;
@@ -844,7 +827,6 @@ const NewRecipe = () => {
                   setHaveQSP(true);
                   localStorage.setItem("currentQSP", JSON.stringify(phase));
                   localStorage.setItem("QSP", JSON.stringify(data));
-                  await addIngredientToPhase("0", data);
                 }}
                 resetTrigger={resetQSP} // passez une prop qui change quand vous voulez reset
               />
@@ -975,7 +957,7 @@ const NewRecipe = () => {
                 >
                   Préparation
                 </button>
-                {phaseAll.map((item, index) => (
+                {phases.map((item, index) => (
                   <button
                     key={index}
                     onClick={() => {
@@ -1009,16 +991,18 @@ const NewRecipe = () => {
             )}
 
             {/* Phase tab */}
-            {currentPhase && !switcher && (
+            {phases && currentPhase && !switcher && (
               <PhaseTab
-                phaseData={phaseData}
-                ingredientsByCategory={ingredientsByCategory}
-                phaseIngredient={phaseIngredient}
+                currentRecipeData={phaseData}
+                ingredient={ingredient}
                 currentPhase={currentPhase}
                 selectedCategory={selectedCategory}
-                setPhaseIngretient={setPhaseIngretient}
+                searchTerm={searchTerm}
+                setIngretient={setIngretient}
                 setSelectedCategory={setSelectedCategory}
+                handleSearch={handleSearch}
                 addIngredientToPhase={addIngredientToPhase}
+                removeIngredientFromPhase={removeIngredientFromPhase}
               />
             )}
 

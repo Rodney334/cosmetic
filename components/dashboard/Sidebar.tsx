@@ -1,4 +1,3 @@
-import { signOut } from "next-auth/react";
 import SidebarItem from "./SidebarItem";
 import {
   Settings,
@@ -12,8 +11,10 @@ import {
   Home,
 } from "lucide-react";
 import Link from "next/link";
+import { authStore } from "@/stores/auth.store";
 
 export default function DashboardSidebar() {
+  const { logout } = authStore();
   return (
     <aside className="w-64 bg-white border-r border-gray-200 p-4">
       <div className="flex items-center justify-start gap-2 mb-6">
@@ -69,9 +70,9 @@ export default function DashboardSidebar() {
             />
             <SidebarItem
               title="Déconnexion"
-              href="/private"
+              href="/public/login"
               icon={<LogOut className="h-5 w-5" />}
-              logOut={() => signOut({ callbackUrl: "/public/login" })}
+              logOut={logout}
             />
           </ul>
         </div>

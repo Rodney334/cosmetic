@@ -1,15 +1,27 @@
 import { Bell, Search, UserCircle } from "lucide-react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { AuthSpinner } from "../AuthSpinner";
+import { useEffect } from "react";
+import { authStore } from "@/stores/auth.store";
+import { useRouter } from "next/router";
 
 export default function DashboardHeader() {
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { token } = authStore();
+
+  useEffect(() => {
+    const localToken = localStorage.getItem("token");
+    if (!token && !localToken) {
+      router.push("/public/login");
+      return;
+    }
+  }, [token]);
+
+  if (!token) return <AuthSpinner />;
   return (
     <header className="bg-white shadow-sm">
       <div className="flex items-center justify-between p-4 text-gray-700">
-        <h1 className="text-2xl font-bold">
-          {session?.user.name || "Espace privé"}
-        </h1>
+        <h1 className="text-2xl font-bold">{"Espace privé"}</h1>
         <div className="flex items-center space-x-28">
           <div className="flex items-center gap-2 w-64 p-1.5 pl-2 rounded bg-gray-200 border-0">
             <Search className="h-5 w-5 text-gray-500" />

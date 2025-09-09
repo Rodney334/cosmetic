@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import DashboardSidebar from "@/components/dashboard/Sidebar";
 import DashboardHeader from "@/components/dashboard/Header";
 import DashboardFooter from "@/components/dashboard/Footer";
-import TokenExpirationHandler from "@/components/TokenExpirationHandler";
 
 type DashboardLayoutProps = {
   children: ReactNode;
@@ -20,7 +19,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-4">{children}</main>
-        <TokenExpirationHandler />
         {/* Footer */}
         <DashboardFooter />
       </div>

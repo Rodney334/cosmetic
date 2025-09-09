@@ -12,11 +12,11 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/stores/user.store";
-import { useSession } from "next-auth/react";
 import { UserType } from "@/types/user.type";
 import { api } from "@/constantes/api.constante";
 import Modal from "@/components/Modal"; // Vous devrez créer ce composant
 import axios from "axios";
+import { authStore } from "@/stores/auth.store";
 
 type User = {
   id: number;
@@ -39,8 +39,8 @@ const StatusBadge = ({ status }: { status: User["status"] }) => {
 
 const Utilisateurs: NextPageWithLayout = () => {
   const router = useRouter();
-  const { data: session, status } = useSession();
   const { userAll, getAllUser, getUserById } = useUserStore();
+  const { token, user } = authStore();
 
   // États pour les modales et actions
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
@@ -59,11 +59,11 @@ const Utilisateurs: NextPageWithLayout = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
 
-  useEffect(() => {
-    if (session && session.accessToken) {
-      getAllUser(session.accessToken);
-    }
-  }, [session]);
+  // useEffect(() => {
+  //   if (session && session.accessToken) {
+  //     getAllUser(session.accessToken);
+  //   }
+  // }, [session]);
 
   useEffect(() => {
     if (userAll.length > 0) {
@@ -112,7 +112,7 @@ const Utilisateurs: NextPageWithLayout = () => {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.accessToken}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -124,7 +124,7 @@ const Utilisateurs: NextPageWithLayout = () => {
           } avec succès`,
           type: "success",
         });
-        getAllUser(session?.accessToken!); // Rafraîchir la liste des utilisateurs
+        // getAllUser(.accessToken!); // Rafraîchir la liste des utilisateurs
       } else {
         setMessage({
           text: "Une erreur est survenue",
@@ -159,7 +159,7 @@ const Utilisateurs: NextPageWithLayout = () => {
         `${api.base_url}/users/${selectedUser._id}`,
         {
           headers: {
-            Authorization: `Bearer ${session?.accessToken}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -169,7 +169,7 @@ const Utilisateurs: NextPageWithLayout = () => {
           text: "Utilisateur supprimé avec succès",
           type: "success",
         });
-        getAllUser(session?.accessToken!); // Rafraîchir la liste des utilisateurs
+        // getAllUser(accessToken!); // Rafraîchir la liste des utilisateurs
       } else {
         setMessage({
           text: "Une erreur est survenue lors de la suppression",

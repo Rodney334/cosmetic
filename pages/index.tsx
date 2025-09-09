@@ -1,27 +1,21 @@
-import { useCategoryStore } from "@/stores/categorie.store";
-import { useIngredientStore } from "@/stores/ingredient.store";
-import { useUserStore } from "@/stores/user.store";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect } from "react";
-
+import { authStore } from "@/stores/auth.store";
+import apiClient from "@/lib/axios";
 const HomePage = () => {
-  const { data: session } = useSession();
-  const { getAllIngredient, groupIngredientsByCategory, getIngredientQSP } =
-    useIngredientStore();
-  const { getAllUser, getUserById } = useUserStore();
-  const { getAllCategory } = useCategoryStore();
-  // console.log({ session, env: process.env.NEXTAUTH_SECRET });
+  const { token, refreshToken } = authStore();
   useEffect(() => {
-    if (session && session.accessToken) {
-      getAllIngredient(session.accessToken);
-      groupIngredientsByCategory(session.accessToken);
-      getUserById(session.accessToken, session.user.id);
-      getAllUser(session.accessToken);
-      getAllCategory(session.accessToken);
-      getIngredientQSP(session.accessToken);
+    const checkTokenIsValid = async () => {
+      try {
+        await apiClient.get("/auth/verify-token");
+      } catch (error: any) {
+        console.log({ error });
+      }
+    };
+    if (token) {
+      checkTokenIsValid();
     }
-  }, [session]);
+  }, [token, refreshToken]);
   return (
     <div className="min-h-screen bg-[#4B352A] opacity-80 p-6 py-24">
       <div className="max-w-6xl mx-auto pt-20 space-y-10 bg-white rounded-lg w-full px-6 md:px-12 py-10">

@@ -1,23 +1,20 @@
 import { api } from "@/constantes/api.constante";
+import apiClient from "@/lib/axios";
 import { CategorieIngredientType } from "@/types/ingredient.type";
 import axios, { AxiosResponse } from "axios";
 import { create } from "zustand";
 
 interface CategoryStoreInterface {
   categories: CategorieIngredientType[];
-  getAllCategory: (token: string) => Promise<void>;
+  getAllCategory: () => Promise<void>;
 }
 
 export const useCategoryStore = create<CategoryStoreInterface>((set, get) => ({
   categories: [],
 
-  getAllCategory: async (token: string) => {
+  getAllCategory: async () => {
     try {
-      const response = await axios.get(`${api.base_url}/ingredientcategorie/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.get(`/ingredientcategorie/`);
       // console.log("category : ", response.data);
       set({ categories: response.data });
     } catch (error) {}

@@ -1,57 +1,71 @@
 import React, { useEffect, useState } from "react";
 import { Search } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { useIngredientStore } from "@/stores/ingredient.store";
 import { usePhaseStore } from "@/stores/phase.store";
-import { PhaseType } from "@/types/phase.type";
+import { PhaseCategorieIngredientsType, PhaseType } from "@/types/phase.type";
 import { IngredientType } from "@/types/ingredient.type";
 import { PhaseData } from "@/types/recipe.type";
 import { IngredientTab } from "@/components/IngredientTabComponent";
+import { authStore } from "@/stores/auth.store";
+import apiClient from "@/lib/axios";
 
 const IngredientsInterface = () => {
-  const { data: session } = useSession();
-  const {
-    ingredientsByCategory,
-    getAllIngredient,
-    groupIngredientsByCategory,
-  } = useIngredientStore();
+  const { token, refreshToken } = authStore();
+  const { phases, getPhases } = usePhaseStore();
 
-  const { phaseAll, getAllPhase } = usePhaseStore();
-
-  const [phaseData, setPhaseData] = useState<PhaseData[]>([]);
   const [activeTab, setActiveTab] = useState<string>("Tous");
-  const [currentPhase, setCurrentPhase] = useState<PhaseType | null>();
-  const [phaseIngredient, setPhaseIngretient] = useState<IngredientType[]>([]);
+  const [ingredient, setIngretient] = useState<IngredientType[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [currentPhase, setCurrentPhase] =
+    useState<PhaseCategorieIngredientsType>();
+
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [tokenIsValid, setTokenIsValid] = useState<boolean>(false);
 
   useEffect(() => {
-    if (session && session.accessToken) {
-      getAllIngredient(session.accessToken);
-      groupIngredientsByCategory(session.accessToken);
-      getAllPhase(session.accessToken);
+    const checkTokenIsValid = async () => {
+      console.log({ token });
+      try {
+        await apiClient.get("/auth/verify-token");
+        setTokenIsValid(true);
+      } catch (error: any) {
+        setTokenIsValid(false);
+        console.log({ error });
+      }
+    };
+    if (token) {
+      checkTokenIsValid();
     }
-  }, [session]);
+  }, [token, refreshToken]);
 
   useEffect(() => {
-    if (phaseAll?.length > 0 && phaseData.length === 0) {
-      setCurrentPhase(phaseAll[0]);
-      const initialPhaseData = [
-        ...phaseAll.map((el) => {
-          return {
-            id: el._id,
-            title: el.nom,
-            ingredients: [],
-            allowedCategories: el.allowedCategories,
-          };
-        }),
-      ];
-      setPhaseData(initialPhaseData);
+    if (token && tokenIsValid) {
+      console.log({ token, tokenIsValid });
+      getPhases();
     }
-  }, [phaseAll]);
+  }, [token, tokenIsValid]);
 
-  const [searchIngredient, setSearchIngredient] = useState<string>("");
-  const [selectedCategory, setSelectedCategory] = useState<string>(
-    "Ingrédients de base"
-  );
+  useEffect(() => {
+    if (phases && phases.length > 0) {
+      setCurrentPhase(phases[0]);
+      setActiveTab(phases[0]._id);
+      setIngretient(phases[0].ingredientsPossible);
+    }
+  }, [phases]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    if (!value) {
+      setIngretient(currentPhase!.ingredients);
+      return;
+    }
+    console.log({ value });
+    setIngretient(
+      currentPhase!.ingredientsPossible.filter((el) =>
+        el.nom.toLowerCase().includes(value.toLowerCase())
+      )
+    );
+  };
 
   return (
     <div className="text-gray-700 min-h-screen bg-[#4B352A] opacity-80 p-6 py-24">
@@ -63,55 +77,20 @@ const IngredientsInterface = () => {
           </h1>
         </div>
 
-        {/* Search and Tabs Section */}
-        <div className="mb-6 space-y-4">
-          {/* Search */}
-          <div className="flex items-center gap-2">
-            <label className="font-medium">Rechercher un Ingrédient :</label>
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Lorem ipsum"
-                value={searchIngredient}
-                onChange={(e) => setSearchIngredient(e.target.value)}
-                className="text-gray-700 w-full pl-10 p-3 border border-gray-300 rounded-lg"
-              />
-            </div>
-          </div>
-
-          {/* Phase Tabs */}
-          <div className="mb-4 flex gap-2">
-            {phaseAll.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setActiveTab(item._id);
-                  setCurrentPhase(item);
-                  setPhaseIngretient([]);
-                }}
-                className={`px-4 py-2 rounded font-medium cursor-pointer ${
-                  activeTab === item._id
-                    ? "bg-[#4B352A] text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                {item.nom}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Main Content Area with Categories and Ingredients Table */}
-        {currentPhase && (
+        {phases && currentPhase && (
           <IngredientTab
-            phaseData={phaseData}
-            ingredientsByCategory={ingredientsByCategory}
-            phaseIngredient={phaseIngredient}
-            currentPhase={currentPhase!}
+            phaseData={phases}
+            activeTab={activeTab}
+            ingredient={ingredient}
+            currentPhase={currentPhase}
             selectedCategory={selectedCategory}
-            setPhaseIngretient={setPhaseIngretient}
+            searchTerm={searchTerm}
+            setActiveTab={setActiveTab}
+            setIngretient={setIngretient}
+            setCurrentPhase={setCurrentPhase}
             setSelectedCategory={setSelectedCategory}
+            handleSearch={handleSearch}
           />
         )}
 

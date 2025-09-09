@@ -1,11 +1,11 @@
 import { IngredientType } from "@/types/ingredient.type";
-import { PhaseType } from "@/types/phase.type";
+import { PhaseCategorieIngredientsType, PhaseType } from "@/types/phase.type";
 import { PhaseData } from "@/types/recipe.type";
 import { CircleQuestionMark, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 type RecetteTabType = {
-  QSPphase: PhaseType | undefined;
+  QSPphase: PhaseCategorieIngredientsType | undefined;
   phaseData: PhaseData[];
   removeIngredientFromPhase: (
     phaseId: string,
@@ -40,9 +40,9 @@ export const RecetteTab = ({
                 <th className="p-3 text-center font-medium border-r border-gray-300 min-w-[100px]">
                   Phase
                 </th>
-                <th className="p-3 text-center font-medium border-r border-gray-300 min-w-[120px]">
+                {/* <th className="p-3 text-center font-medium border-r border-gray-300 min-w-[120px]">
                   Famille
-                </th>
+                </th> */}
                 <th className="p-3 text-center font-medium border-r border-gray-300 min-w-[80px]">
                   %
                 </th>
@@ -72,112 +72,115 @@ export const RecetteTab = ({
                   <td className="p-3 font-medium text-blue-800 border-r border-gray-300 border-b min-w-[150px]">
                     {item.id === "0" ? "QSP" : item.title}
                   </td>
-                  <td className="border-r border-gray-300 border-b min-w-[100px]"></td>
-                  <td className="border-r border-gray-300 border-b min-w-[120px]"></td>
-                  <td className="border-r border-gray-300 border-b min-w-[80px]"></td>
-                  <td className="border-r border-gray-300 border-b min-w-[100px]"></td>
-                  <td className="border-b border-gray-300 min-w-[100px]"></td>
+                  <td className="border-r border-gray-300 border-b w-1/4"></td>
+                  <td className="border-r border-gray-300 border-b w-1/4"></td>
+                  {/* <td className="border-r border-gray-300 border-b min-w-[80px]"></td> */}
+                  <td className="border-r border-gray-300 border-b w-1/4"></td>
+                  <td className="border-b border-gray-300 w-1/4"></td>
                 </tr>
 
                 {/* Phase Ingredients */}
-                {item.ingredients.map((ingredient) => (
-                  <tr
-                    key={ingredient._id}
-                    className="bg-white hover:bg-gray-50"
-                  >
-                    <td className="p-2 border border-gray-300 min-w-[150px]">
-                      <input
-                        type="text"
-                        value={ingredient.nom}
-                        className="w-full text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
-                        placeholder="-"
-                        disabled={true}
-                      />
-                    </td>
-                    <td className="p-2 border-b border-gray-300 flex justify-center items-center min-w-[100px]">
-                      <span className="bg-green-100 rounded text-xs font-medium text-green-800 min-w-6 text-center">
-                        {item.id === "0" ? QSPphase?.nom : item.title}
-                      </span>
-                    </td>
-                    <td className="p-2 border border-gray-300 min-w-[120px]">
-                      <input
-                        type="text"
-                        disabled={true}
-                        value={ingredient.categorie.nom}
-                        className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center"
-                        placeholder="famille"
-                      />
-                    </td>
-                    <td
-                      className={`relative p-2 border border-gray-300 min-w-[80px]`}
-                    >
-                      <input
-                        type="text"
-                        value={ingredient.quantite || ""}
-                        onChange={(e) => {
-                          let value = e.target.value;
-                          if (/^[0-9]*[,.]?[0-9]*$/.test(value)) {
-                            const checkdecimal = [...value].filter(
-                              (char) => char === "." || char === ","
-                            ).length;
-                            if (checkdecimal <= 1) {
+                {item.ingredients.map((ingredient, index) => {
+                  return (
+                    <tr key={index} className="bg-white hover:bg-gray-50">
+                      <td className="p-2 border border-gray-300 min-w-[150px]">
+                        <span className="w-full text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded">
+                          {ingredient.nom}
+                        </span>
+                      </td>
+                      <td className="p-2 border-b border-gray-300 flex justify-center items-center min-w-[100px]">
+                        <span className="bg-green-100 rounded text-xs font-medium text-green-800 min-w-6 text-center">
+                          {item.id === "0" ? QSPphase?.nom : item.title}
+                        </span>
+                      </td>
+                      {/* <td className="p-2 border border-gray-300 min-w-[120px]">
+                        <span className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center">
+                          {ingredient.categorie.nom}
+                        </span>
+                      </td> */}
+                      <td
+                        className={`relative p-2 border border-gray-300 min-w-[80px]`}
+                      >
+                        <input
+                          type="text"
+                          value={ingredient.quantite || ""}
+                          onChange={(e) => {
+                            let value = e.target.value;
+                            if (/^[0-9]*[,.]?[0-9]*$/.test(value)) {
+                              const checkdecimal = [...value].filter(
+                                (char) => char === "." || char === ","
+                              ).length;
+                              if (checkdecimal <= 1) {
+                                updateIngredientQuantity(
+                                  item.id,
+                                  ingredient._id,
+                                  value.replace(",", ".")
+                                );
+                              }
+                            } else {
+                              value = "";
                               updateIngredientQuantity(
                                 item.id,
                                 ingredient._id,
                                 value.replace(",", ".")
                               );
                             }
-                          } else {
-                            value = "";
-                            updateIngredientQuantity(
-                              item.id,
-                              ingredient._id,
-                              value.replace(",", ".")
-                            );
-                          }
-                        }}
-                        className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center"
-                        placeholder="-"
-                        disabled={item.id === "0"}
-                      />
-                      <button
-                        className={`absolute top-1 right-1`}
-                        title={`Dosage recommandé : ${ingredient.dosageRecommande}`}
-                      >
-                        <CircleQuestionMark
-                          className={`w-4 h-4 rounded font-medium text-amber-500 text-center`}
+                          }}
+                          className="w-full p-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-center"
+                          placeholder="-"
+                          disabled={item.id === "0"}
                         />
-                      </button>
-                    </td>
-                    <td className="p-2 border-r border-b border-gray-300 min-w-[100px] text-center">
-                      0
-                    </td>
-                    <td className="p-3 border-b border-gray-300 flex justify-center items-center min-w-[100px]">
-                      <Trash2
-                        className="w-6 h-6 p-1 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded cursor-pointer"
-                        onClick={() => {
-                          removeIngredientFromPhase(item.id, ingredient);
-                        }}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                        <button
+                          className={`absolute top-1 right-1`}
+                          title={`Dosage recommandé : ${ingredient.dosageRecommande}`}
+                        >
+                          <CircleQuestionMark
+                            className={`w-4 h-4 rounded font-medium text-amber-500 text-center`}
+                          />
+                        </button>
+                      </td>
+                      <td className="p-2 border-r border-b border-gray-300 min-w-[100px] text-center">
+                        0
+                      </td>
+                      <td className="p-3 border-b border-gray-300 flex justify-center items-center min-w-[100px]">
+                        <Trash2
+                          className="w-6 h-6 p-1 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded cursor-pointer"
+                          onClick={() => {
+                            removeIngredientFromPhase(item.id, ingredient);
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             ))}
             <tfoot className="bg-blue-200 sticky bottom-0">
               <tr>
-                <td className="p-3 font-bold text-blue-800 border-r border-gray-300 min-w-[150px]">
+                <td className="p-3 font-bold text-blue-800 border-r border-gray-300 w-1/4">
                   TOTAL
                 </td>
-                <td className="border-r border-gray-300 min-w-[100px]"></td>
-                <td className="border-r border-gray-300 min-w-[120px]"></td>
-                <td className="p-3 text-center font-bold text-blue-800 border-r border-gray-300 min-w-[80px]">
-                  100
+                <td className="border-r border-gray-300 w-1/4"></td>
+                {/* <td className="border-r border-gray-300 min-w-[120px]"></td> */}
+                <td className="p-3 text-center font-bold text-blue-800 border-r border-gray-300 w-1/4">
+                  {phaseData.reduce((total, phase) => {
+                    return (
+                      total +
+                      phase.ingredients.reduce((sum, ingredient) => {
+                        console.log({
+                          sum,
+                          qte: Number(ingredient.quantite),
+                          somme: sum + Number(ingredient.quantite),
+                        });
+                        return sum + (Number(ingredient.quantite) || 0);
+                      }, 0)
+                    );
+                  }, 0)}
                 </td>
-                <td className="p-3 text-center font-bold text-blue-800 border-r border-gray-300 min-w-[100px]">
+                <td className="p-3 text-center font-bold text-blue-800 border-r border-gray-300 w-1/4">
                   0.00
                 </td>
-                <td className="min-w-[100px]"></td>
+                <td className="w-1/4"></td>
               </tr>
             </tfoot>
           </table>

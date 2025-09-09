@@ -1,4 +1,4 @@
-import { CategorieIngredientType } from "./ingredient.type";
+import { CategorieIngredientType, IngredientType } from "./ingredient.type";
 import { RecipeType } from "./recipe.type";
 
 export type PhaseType = {
@@ -8,4 +8,12 @@ export type PhaseType = {
   createdAt: string;
   updatedAt: string;
   allowedCategories: CategorieIngredientType[];
+};
+
+export type PhaseCategorieIngredientsType = {
+  _id: string;
+  nom: string;
+  categories: CategorieIngredientType[];
+  ingredients: IngredientType[];
+  ingredientsPossible: IngredientType[];
 };

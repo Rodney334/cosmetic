@@ -4,15 +4,16 @@ import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Toaster } from "react-hot-toast";
 import { useRouter } from "next/router";
-import { signIn } from "next-auth/react";
 
 import { LoginDataType } from "@/types/auth.type";
-import { CustomErrorToast, CustomSuccessToast } from "@/components/CustomToast";
+import { CustomToast } from "@/components/CustomToast";
+import apiClient from "@/lib/axios";
+import { authStore } from "@/stores/auth.store";
 
 const Login = () => {
   const router = useRouter();
+  const { setUser, setToken, setRefreshToken } = authStore();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -52,47 +53,34 @@ const Login = () => {
     validationSchema,
     onSubmit: async (values: LoginDataType) => {
       // Ici vous pourriez ajouter votre logique de soumission (API call, etc.)
-      // console.log("Form submitted:", values);
       setIsLoading(true);
+      console.log("yes");
       try {
-        const result = await signIn("credentials", {
-          redirect: false,
-          email: values.email,
-          password: values.password,
+        const response = await apiClient.post("/auth/login", values);
+        CustomToast({
+          success: true,
+          text: "Connexion réussie ! Redirection en cours...",
         });
+        const { accessToken, refreshToken, user } = response.data;
 
-        if (result?.error) {
-          CustomErrorToast(
-            "Erreur de connexion. Veuillez vérifier vos informations."
-          );
-        } else {
-          // console.log("result:", result);
-          CustomSuccessToast("Connexion réussie ! Redirection en cours...");
-          const id = setTimeout(() => router.push("/"), 2000);
-          setTimeoutId(id);
-        }
+        // Stocker les tokens et informations utilisateur
+        localStorage.setItem("token", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        setToken(accessToken);
+        setRefreshToken(refreshToken);
+        setUser(user);
+
+        const id = setTimeout(() => {
+          router.push("/");
+        }, 2000);
+        setTimeoutId(id);
       } catch (error) {
-        CustomErrorToast("Une erreur est survenue lors de la connexion.");
+        CustomToast({ success: false, text: "Identifiant invalide." });
       } finally {
         setIsLoading(false);
       }
-      // axios.post(`${api.base_url}/auth/login`, values)
-      //   .then((response) => {
-      //     console.log("response :", response);
-      //     localStorage.setItem("accessToken", response.data.accessToken);
-      //     localStorage.setItem("refreshToken", response.data.refreshToken);
-      //     localStorage.setItem("user", response.data.user);
-      //     signIn('credentials', { email: 'test@test.com', password: 'test' });
-      //     CustomSuccessToast("Connexion réussie ! Redirection en cours...");
-      //     const id = setTimeout(() => {
-      //       router.push("/");
-      //     }, 2000);
-      //     setTimeoutId(id);
-      //   })
-      //   .catch((error) => {
-      //     // console.log("failed :", error);
-      //     CustomErrorToast("Erreur de connexion. Veuillez vérifier vos informations.");
-      //   });
     },
   });
 

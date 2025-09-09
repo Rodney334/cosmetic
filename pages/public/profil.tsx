@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, Mail, Plus, PowerCircle, PowerOff } from "lucide-react";
 import Image from "next/image";
-import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 
 const Profil = () => {
@@ -80,8 +79,7 @@ const Profil = () => {
             <PowerCircle
               className={`w-10 h-10 p-1 bg-red-300 rounded hover:bg-red-500 text-gray-200 hover:text-white`}
               onClick={() => {
-                signOut({ callbackUrl: "/public/login" });
-                // router.push("/public/login");
+                router.push("/public/login");
               }}
             />
           </div>

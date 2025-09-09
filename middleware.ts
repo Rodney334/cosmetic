@@ -1,62 +1,54 @@
 // /middleware.ts
-// export { default } from "next-auth/middleware";
-
-// export const config = {
-//   // Applique le middleware uniquement aux routes /private
-//   matcher: ["/private/:path*"],
-// };
 
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
-import { checkIfTokenIsValid, SessionExpire } from "./utils/axios";
-import { signOut } from "next-auth/react";
 
 // Paths that require admin authentication
 const protectedRoutes = ["/private"];
 
 export async function middleware(req: NextRequest) {
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET || "Secrete key 1234567890",
-  });
-  console.log({ token: token?.accessToken });
+  console.log("middleware: ", req);
+  // const token = await getToken({
+  //   req,
+  //   secret: process.env.NEXTAUTH_SECRET || "Secrete key 1234567890",
+  // });
+  // console.log({ token: token?.accessToken });
 
-  const isAvalableToken: SessionExpire = await checkIfTokenIsValid(
-    token?.accessToken
-  );
-  console.log({ isAvalableToken });
-  if (!req.nextUrl.pathname.endsWith("login")) {
-    if (isAvalableToken === SessionExpire.EXPIRE) {
-      const loginUrl = new URL("/public/login", req.url);
-      // Supprimer le cookie d'authentification côté serveur
+  // const isAvalableToken: SessionExpire = await checkIfTokenIsValid(
+  //   token?.accessToken
+  // );
+  // console.log({ isAvalableToken });
+  // if (!req.nextUrl.pathname.endsWith("login")) {
+  //   if (isAvalableToken === SessionExpire.EXPIRE) {
+  //     const loginUrl = new URL("/public/login", req.url);
+  //     // Supprimer le cookie d'authentification côté serveur
 
-      // Au lieu d'appeler signOut() qui nécessite window,
-      // et on peut éventuellement supprimer le cookie côté serveur
-      const response = NextResponse.redirect(loginUrl);
-      response.cookies.set("next-auth.session-token", "", {
-        maxAge: -1,
-        path: "/",
-      });
+  //     // Au lieu d'appeler signOut() qui nécessite window,
+  //     // et on peut éventuellement supprimer le cookie côté serveur
+  //     const response = NextResponse.redirect(loginUrl);
+  //     response.cookies.set("next-auth.session-token", "", {
+  //       maxAge: -1,
+  //       path: "/",
+  //     });
 
-      return response;
-    }
-  }
+  //     return response;
+  //   }
+  // }
 
-  // Check if the path is protected
-  const isProtected = protectedRoutes.some((path) =>
-    req.nextUrl.pathname.startsWith(path)
-  );
+  // // Check if the path is protected
+  // const isProtected = protectedRoutes.some((path) =>
+  //   req.nextUrl.pathname.startsWith(path)
+  // );
 
-  if (isProtected) {
-    if (!token || (token && token.role !== "admin")) {
-      const loginUrl = new URL("/public/profil", req.url);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
+  // if (isProtected) {
+  //   if (!token || (token && token.role !== "admin")) {
+  //     const loginUrl = new URL("/public/profil", req.url);
+  //     return NextResponse.redirect(loginUrl);
+  //   }
+  // }
 
-  // If not protected or authenticated, continue
-  return NextResponse.next();
+  // // If not protected or authenticated, continue
+  // return NextResponse.next();
 }
 
 // Only run middleware on these routes

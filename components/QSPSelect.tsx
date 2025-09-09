@@ -18,27 +18,22 @@ const QSPSelect = ({
 }: QSPSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  // const [selectedIngredient, setSelectedIngredient] = useState<
-  //   IngredientType | undefined
-  // >(qsp);
+  const [selectedIngredient, setSelectedIngredient] = useState<
+    IngredientType | undefined
+  >(qsp);
   const selectRef = useRef<HTMLDivElement>(null);
 
   // Reset selection when resetTrigger changes
-  // useEffect(() => {
-  //   setSelectedIngredient(undefined);
-  //   setSearchTerm("");
-  // }, [resetTrigger]);
+  useEffect(() => {
+    setSelectedIngredient(undefined);
+    setSearchTerm("");
+  }, [resetTrigger]);
 
   // Filter ingredients based on search term
   const filteredIngredients = useMemo(() => {
     if (!searchTerm) return ingredients;
-    return ingredients.filter(
-      (ingredient) =>
-        ingredient.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ingredient.inci.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ingredient.categorie.nom
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
+    return ingredients.filter((ingredient) =>
+      ingredient.nom.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [ingredients, searchTerm]);
 
@@ -67,7 +62,7 @@ const QSPSelect = ({
   };
 
   return (
-    <div className="relative w-full max-w-md" ref={selectRef}>
+    <div className="relative w-full max-w-md z-20" ref={selectRef}>
       <div className="flex flex-col gap-2">
         <label className="font-medium text-gray-700">QSP 100% :</label>
 

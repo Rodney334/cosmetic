@@ -8,7 +8,6 @@ import {
   Plus,
   List,
 } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { useIngredientStore } from "@/stores/ingredient.store";
 import { usePhaseStore } from "@/stores/phase.store";
 import { useEffect, useState } from "react";
@@ -25,7 +24,6 @@ type CustomPhase = {
 };
 
 const Ingredients: NextPageWithLayout = () => {
-  const { data: session } = useSession();
   const router = useRouter();
   const { groupIngredientsByPhase } = useIngredientStore();
   const { phaseAll, getAllPhase } = usePhaseStore();
@@ -64,33 +62,33 @@ const Ingredients: NextPageWithLayout = () => {
   const [message, setMessage] = useState({ text: "", type: "" });
 
   // Fetch phases et catégories
-  useEffect(() => {
-    if (session?.accessToken) {
-      getAllPhase(session.accessToken);
-      getAllCategory(session.accessToken);
-    }
-  }, [session]);
+  // useEffect(() => {
+  //   if (accessToken) {
+  //     getAllPhase(accessToken);
+  //     getAllCategory(accessToken);
+  //   }
+  // }, []);
 
   // Group ingredients by phase
-  useEffect(() => {
-    const fetchIngredientsByPhase = async () => {
-      if (session?.accessToken && phaseAll.length > 0) {
-        const phasesWithIngredients = await Promise.all(
-          phaseAll.map(async (phase) => {
-            const ingredients = await groupIngredientsByPhase(
-              session.accessToken!,
-              phase._id
-            );
-            return { phase, ingredients };
-          })
-        );
-        setAllPhases(phasesWithIngredients);
-        setFilteredPhases(phasesWithIngredients);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchIngredientsByPhase = async () => {
+  //     if (accessToken && phaseAll.length > 0) {
+  //       const phasesWithIngredients = await Promise.all(
+  //         phaseAll.map(async (phase) => {
+  //           const ingredients = await groupIngredientsByPhase(
+  //             session.accessToken!,
+  //             phase._id
+  //           );
+  //           return { phase, ingredients };
+  //         })
+  //       );
+  //       setAllPhases(phasesWithIngredients);
+  //       setFilteredPhases(phasesWithIngredients);
+  //     }
+  //   };
 
-    fetchIngredientsByPhase();
-  }, [session, phaseAll]);
+  //   fetchIngredientsByPhase();
+  // }, [session, phaseAll]);
 
   // Filtrer les ingrédients
   useEffect(() => {
@@ -155,91 +153,91 @@ const Ingredients: NextPageWithLayout = () => {
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
 
-    try {
-      const payload = {
-        ...formData,
-      };
+  //   try {
+  //     const payload = {
+  //       ...formData,
+  //     };
 
-      const response = await axios.post(`${api.base_url}/ingredient`, payload, {
-        headers: {
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-      });
+  //     const response = await axios.post(`${api.base_url}/ingredient`, payload, {
+  //       headers: {
+  //         Authorization: `Bearer ${session?.accessToken}`,
+  //       },
+  //     });
 
-      setMessage({ text: "Ingrédient ajouté avec succès", type: "success" });
-      // Rafraîchir les données
-      if (session?.accessToken) {
-        const phasesWithIngredients = await Promise.all(
-          phaseAll.map(async (phase) => {
-            const ingredients = await groupIngredientsByPhase(
-              session.accessToken!,
-              phase._id
-            );
-            return { phase, ingredients };
-          })
-        );
-        setAllPhases(phasesWithIngredients);
-        setFilteredPhases(phasesWithIngredients);
-      }
-      setFormData({
-        nom: "",
-        inci: "",
-        origine: "",
-        forme: "",
-        categorie: "",
-      });
-      setShowAddModal(false);
-    } catch (error) {
-      setMessage({ text: "Erreur lors de l'ajout", type: "error" });
-    } finally {
-      setIsLoading(false);
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-    }
-  };
+  //     setMessage({ text: "Ingrédient ajouté avec succès", type: "success" });
+  //     // Rafraîchir les données
+  //     if (session?.accessToken) {
+  //       const phasesWithIngredients = await Promise.all(
+  //         phaseAll.map(async (phase) => {
+  //           const ingredients = await groupIngredientsByPhase(
+  //             session.accessToken!,
+  //             phase._id
+  //           );
+  //           return { phase, ingredients };
+  //         })
+  //       );
+  //       setAllPhases(phasesWithIngredients);
+  //       setFilteredPhases(phasesWithIngredients);
+  //     }
+  //     setFormData({
+  //       nom: "",
+  //       inci: "",
+  //       origine: "",
+  //       forme: "",
+  //       categorie: "",
+  //     });
+  //     setShowAddModal(false);
+  //   } catch (error) {
+  //     setMessage({ text: "Erreur lors de l'ajout", type: "error" });
+  //   } finally {
+  //     setIsLoading(false);
+  //     setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+  //   }
+  // };
 
   // Fonction pour supprimer un ingrédient
-  const handleDeleteIngredient = async () => {
-    if (!ingredientToDelete || !session?.accessToken) return;
+  // const handleDeleteIngredient = async () => {
+  //   if (!ingredientToDelete || !session?.accessToken) return;
 
-    setIsLoading(true);
-    try {
-      const response = await axios.delete(
-        `${api.base_url}/ingredient/${ingredientToDelete._id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`,
-          },
-        }
-      );
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await axios.delete(
+  //       `${api.base_url}/ingredient/${ingredientToDelete._id}`,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${session.accessToken}`,
+  //         },
+  //       }
+  //     );
 
-      setMessage({ text: "Ingrédient supprimé avec succès", type: "success" });
+  //     setMessage({ text: "Ingrédient supprimé avec succès", type: "success" });
 
-      // Rafraîchir les données
-      const phasesWithIngredients = await Promise.all(
-        phaseAll.map(async (phase) => {
-          const ingredients = await groupIngredientsByPhase(
-            session?.accessToken!,
-            phase._id
-          );
-          return { phase, ingredients };
-        })
-      );
-      setAllPhases(phasesWithIngredients);
-      setFilteredPhases(phasesWithIngredients);
+  //     // Rafraîchir les données
+  //     const phasesWithIngredients = await Promise.all(
+  //       phaseAll.map(async (phase) => {
+  //         const ingredients = await groupIngredientsByPhase(
+  //           session?.accessToken!,
+  //           phase._id
+  //         );
+  //         return { phase, ingredients };
+  //       })
+  //     );
+  //     setAllPhases(phasesWithIngredients);
+  //     setFilteredPhases(phasesWithIngredients);
 
-      setShowDeleteModal(false);
-      setIngredientToDelete(null);
-    } catch (error) {
-      setMessage({ text: "Erreur lors de la suppression", type: "error" });
-    } finally {
-      setIsLoading(false);
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-    }
-  };
+  //     setShowDeleteModal(false);
+  //     setIngredientToDelete(null);
+  //   } catch (error) {
+  //     setMessage({ text: "Erreur lors de la suppression", type: "error" });
+  //   } finally {
+  //     setIsLoading(false);
+  //     setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+  //   }
+  // };
 
   // Réinitialiser les filtres
   const resetFilters = () => {
@@ -247,7 +245,7 @@ const Ingredients: NextPageWithLayout = () => {
     setSearchTerm("");
   };
 
-  if (!session) return <div>Chargement...</div>;
+  // if (!session) return <div>Chargement...</div>;
 
   return (
     <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm">
@@ -504,7 +502,7 @@ const Ingredients: NextPageWithLayout = () => {
       </div>
 
       {/* Modal pour ajouter un ingrédient */}
-      <Modal
+      {/* <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         title="Ajouter un ingrédient"
@@ -598,7 +596,7 @@ const Ingredients: NextPageWithLayout = () => {
             </button>
           </div>
         </form>
-      </Modal>
+      </Modal> */}
 
       {/* Modal pour afficher les catégories */}
       <Modal
@@ -653,13 +651,13 @@ const Ingredients: NextPageWithLayout = () => {
               >
                 Annuler
               </button>
-              <button
+              {/* <button
                 onClick={handleDeleteIngredient}
                 disabled={isLoading}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
               >
                 {isLoading ? "Suppression..." : "Supprimer définitivement"}
-              </button>
+              </button> */}
             </div>
           </div>
         )}

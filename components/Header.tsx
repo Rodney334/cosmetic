@@ -1,14 +1,15 @@
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { HiUser } from "react-icons/hi";
+import { authStore } from "@/stores/auth.store";
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const { user } = authStore();
+  console.log({ user });
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -81,13 +82,13 @@ const Header = () => {
             <select className="text-sm text-gray-600 bg-transparent border-none outline-none cursor-pointer">
               <option>French (France)</option>
             </select>
-            {session ? (
+            {user.email ? (
               <Link
                 href="/private/dashboard"
                 className="flex lg:flex-row sm:flex-col items-center lg:p-2 px-2 gap-2 bg-white text-black border border-black rounded-md text-sm hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 <HiUser className="w-5 h-5" />
-                <p className="lg:pt-2">{session.user.name}</p>
+                <p className="lg:pt-2">{user.name}</p>
               </Link>
             ) : (
               <Link href="/public/login">
