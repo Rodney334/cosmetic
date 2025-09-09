@@ -42,20 +42,20 @@ const ForgetPass = () => {
         const result = await forgetPassword(values.email);
 
         if (!result) {
-          CustomErrorToast(
-            "Une erreur est survenue. Veuillez vérifier vos informations."
-          );
+          CustomErrorToast({
+            text: "Une erreur est survenue. Veuillez vérifier vos informations.",
+          });
         } else {
-          CustomSuccessToast(
-            "Un mail de confirmation vous a été envoyé! Redirection en cours..."
-          );
+          CustomSuccessToast({
+            text: "Un mail de confirmation vous a été envoyé! Redirection en cours...",
+          });
           // const id = setTimeout(() => router.push("/"), 2000);
           // setTimeoutId(id);
         }
       } catch (error) {
-        CustomErrorToast(
-          "Une erreur est survenue. Veuillez vérifier vos informations."
-        );
+        CustomErrorToast({
+          text: "Une erreur est survenue. Veuillez vérifier vos informations.",
+        });
       } finally {
         setIsLoading(false);
       }

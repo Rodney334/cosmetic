@@ -91,7 +91,9 @@ const Register = () => {
       axios
         .post(`${api.base_url}/auth/register`, validateData)
         .then((data: any) => {
-          CustomSuccessToast("Inscription réussie ! Redirection en cours...");
+          CustomSuccessToast({
+            text: "Inscription réussie ! Redirection en cours...",
+          });
           const id = setTimeout(() => {
             router.push("/public/login");
           }, 2000);
@@ -99,9 +101,9 @@ const Register = () => {
         })
         .catch((error: any) => {
           console.log("failed :", error);
-          CustomErrorToast(
-            "Erreur d'inscription. Veuillez vérifier vos informations."
-          );
+          CustomErrorToast({
+            text: "Erreur d'inscription. Veuillez vérifier vos informations.",
+          });
         });
     },
   });
